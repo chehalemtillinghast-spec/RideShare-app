@@ -1,4 +1,5 @@
 import express from 'express';
+import bcrypt from 'bcrypt';
 import { pool } from '../db/pool.js';
 import { requireAuth } from '../middleware/auth.js';
 
@@ -88,6 +89,24 @@ router.delete('/me/emergency-contacts/:id', requireAuth, async (req, res) => {
     'DELETE FROM emergency_contacts WHERE id = $1 AND user_id = $2',
     [req.params.id, req.user.id]
   );
+  res.status(204).end();
+});
+
+// Deletes your own account. Requires your current password so a hijacked
+// session token alone isn't enough to permanently destroy the account.
+router.delete('/me', requireAuth, async (req, res) => {
+  const { password } = req.body || {};
+  if (!password) {
+    return res.status(400).json({ error: 'password is required to confirm account deletion.' });
+  }
+  const result = await pool.query('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
+  const user = result.rows[0];
+  if (!user) return res.status(404).json({ error: 'User not found.' });
+
+  const valid = await bcrypt.compare(password, user.password_hash);
+  if (!valid) return res.status(401).json({ error: 'Incorrect password.' });
+
+  await pool.query('DELETE FROM users WHERE id = $1', [req.user.id]);
   res.status(204).end();
 });
 

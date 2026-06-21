@@ -7,6 +7,7 @@ export default function Admin() {
   const [flags, setFlags] = useState([]);
   const [unreachable, setUnreachable] = useState([]);
   const [tab, setTab] = useState('stats');
+  const [userSearch, setUserSearch] = useState('');
 
   useEffect(() => {
     api.get('/admin/stats').then(setStats);
@@ -30,6 +31,20 @@ export default function Admin() {
     setFlags(await api.get('/flags'));
   }
 
+  async function deleteUser(u) {
+    if (!confirm(`Permanently delete the account for ${u.email}? This also deletes their rides, messages, ratings, and other data. This cannot be undone.`)) {
+      return;
+    }
+    try {
+      await api.del(`/admin/users/${u.id}`);
+      setUsers(await api.get('/admin/users'));
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  const filteredUsers = users.filter((u) => u.email.toLowerCase().includes(userSearch.trim().toLowerCase()));
+
   return (
     <div className="page">
       <h1>Admin dashboard</h1>
@@ -51,16 +66,26 @@ export default function Admin() {
         </div>
       )}
 
-      {tab === 'users' && users.map((u) => (
-        <div key={u.id} className="card">
-          <p>{u.full_name} ({u.email}) — {u.role} — {u.verification_status} {u.is_suspended && <strong>SUSPENDED</strong>}</p>
-          <button className="btn secondary" onClick={() => verify(u.id, 'verified')}>Verify</button>{' '}
-          <button className="btn secondary" onClick={() => verify(u.id, 'unverified')}>Unverify</button>{' '}
-          <button className="btn danger" onClick={() => suspend(u.id, !u.is_suspended)}>
-            {u.is_suspended ? 'Unsuspend' : 'Suspend'}
-          </button>
-        </div>
-      ))}
+      {tab === 'users' && (
+        <>
+          <div className="field">
+            <label>Search by email</label>
+            <input value={userSearch} onChange={(e) => setUserSearch(e.target.value)} placeholder="someone@example.com" />
+          </div>
+          {filteredUsers.map((u) => (
+            <div key={u.id} className="card">
+              <p>{u.full_name} ({u.email}) — {u.role} — {u.verification_status} {u.is_suspended && <strong>SUSPENDED</strong>}</p>
+              <button className="btn secondary" onClick={() => verify(u.id, 'verified')}>Verify</button>{' '}
+              <button className="btn secondary" onClick={() => verify(u.id, 'unverified')}>Unverify</button>{' '}
+              <button className="btn danger" onClick={() => suspend(u.id, !u.is_suspended)}>
+                {u.is_suspended ? 'Unsuspend' : 'Suspend'}
+              </button>{' '}
+              <button className="btn danger" onClick={() => deleteUser(u)}>Delete account</button>
+            </div>
+          ))}
+          {filteredUsers.length === 0 && <p className="muted">No users match that search.</p>}
+        </>
+      )}
 
       {tab === 'flags' && flags.map((f) => (
         <div key={f.id} className="card">

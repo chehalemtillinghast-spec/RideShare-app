@@ -150,6 +150,13 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
   UNIQUE (user_id, endpoint)
 );
 
+-- events.created_by originally had no ON DELETE clause (defaulted to
+-- RESTRICT), which would block deleting a user who'd created an event.
+-- Keep the event itself but null out its creator instead.
+ALTER TABLE events DROP CONSTRAINT IF EXISTS events_created_by_fkey;
+ALTER TABLE events ADD CONSTRAINT events_created_by_fkey
+  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;
+
 CREATE INDEX IF NOT EXISTS idx_rides_status ON rides(status);
 CREATE INDEX IF NOT EXISTS idx_messages_ride ON messages(ride_id);
 CREATE INDEX IF NOT EXISTS idx_ride_requests_ride ON ride_requests(ride_id);

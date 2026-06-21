@@ -48,6 +48,18 @@ router.patch('/users/:id/verify', async (req, res) => {
   res.json(result.rows[0]);
 });
 
+// Deletes the account entirely. Cascades (see schema.sql) remove the
+// user's rides, requests, messages, ratings, flags, payments, emergency
+// contacts/alerts, notifications, and push subscriptions along with them.
+router.delete('/users/:id', async (req, res) => {
+  if (Number(req.params.id) === req.user.id) {
+    return res.status(400).json({ error: 'Use "Delete my account" in your own profile instead.' });
+  }
+  const result = await pool.query('DELETE FROM users WHERE id = $1 RETURNING id, email', [req.params.id]);
+  if (!result.rows[0]) return res.status(404).json({ error: 'User not found.' });
+  res.json({ ok: true, deleted: result.rows[0] });
+});
+
 router.get('/rides', async (req, res) => {
   const result = await pool.query(
     `SELECT r.*, u.full_name AS creator_name FROM rides r JOIN users u ON u.id = r.creator_id ORDER BY r.created_at DESC`

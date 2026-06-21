@@ -11,6 +11,9 @@ export default function Profile() {
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushSupported, setPushSupported] = useState(false);
   const [pushError, setPushError] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   async function loadContacts() {
     setContacts(await api.get('/users/me/emergency-contacts'));
@@ -59,6 +62,23 @@ export default function Profile() {
     await api.post('/users/me/verification-request', {});
     refresh();
     alert('Verification requested. An admin will review your account.');
+  }
+
+  async function deleteAccount(e) {
+    e.preventDefault();
+    setDeleteError('');
+    if (!confirm('Permanently delete your account? This removes your rides, messages, ratings, and emergency contacts. This cannot be undone.')) {
+      return;
+    }
+    setDeleting(true);
+    try {
+      await api.del('/users/me', { password: deletePassword });
+      logout();
+    } catch (err) {
+      setDeleteError(err.message);
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
@@ -114,6 +134,29 @@ export default function Profile() {
       </form>
 
       <button className="btn danger" style={{ marginTop: 24 }} onClick={logout}>Log out</button>
+
+      <div className="card" style={{ marginTop: 24, borderColor: '#c0392b' }}>
+        <h2>Delete account</h2>
+        <p className="muted">
+          This permanently removes your account along with your rides, requests, messages, ratings, flags,
+          emergency contacts, and notifications. This cannot be undone.
+        </p>
+        <form onSubmit={deleteAccount}>
+          <div className="field">
+            <label>Confirm your password</label>
+            <input
+              type="password"
+              required
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+            />
+          </div>
+          {deleteError && <p className="error">{deleteError}</p>}
+          <button className="btn danger" type="submit" disabled={deleting}>
+            {deleting ? 'Deleting...' : 'Permanently delete my account'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
