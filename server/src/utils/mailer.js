@@ -14,6 +14,12 @@ const transporter = smtpConfigured
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      // Without these, a stalled SMTP connection (e.g. a host blocking or
+      // rate-limiting outbound mail ports) hangs nodemailer indefinitely,
+      // which in turn hangs the HTTP request that triggered the send.
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
     })
   : null;
 

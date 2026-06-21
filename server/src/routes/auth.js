@@ -111,7 +111,13 @@ router.post('/forgot-password', async (req, res) => {
 
       const clientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
       const resetUrl = `${clientOrigin}/reset-password?token=${rawToken}`;
-      await sendPasswordResetEmail(email.toLowerCase(), resetUrl);
+      // Don't make the HTTP response wait on the SMTP round-trip — if the
+      // mail host is slow or unreachable, the request should still return
+      // promptly. Errors are logged server-side, not surfaced to the client
+      // (this endpoint always returns the same generic response anyway).
+      sendPasswordResetEmail(email.toLowerCase(), resetUrl).catch((err) => {
+        console.error('Failed to send password reset email:', err.message);
+      });
     }
 
     res.json({ ok: true, message: 'If an account with that email exists, a reset link has been sent.' });
