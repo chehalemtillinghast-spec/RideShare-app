@@ -1,0 +1,112 @@
+:root {
+  --green: #2d6a4f;
+  --green-light: #d8f3dc;
+  --text: #1b1b1b;
+  --muted: #666;
+  --border: #ddd;
+  --bg: #fafafa;
+  --danger: #c0392b;
+  font: 16px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+
+#root {
+  max-width: 720px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+a { color: var(--green); text-decoration: none; }
+
+h1, h2, h3 { margin: 0 0 8px; }
+
+button, input, textarea, select {
+  font: inherit;
+}
+
+.btn {
+  background: var(--green);
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn.secondary { background: #fff; color: var(--green); border: 1px solid var(--green); }
+.btn.danger { background: var(--danger); }
+
+.field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; text-align: left; }
+.field input, .field textarea, .field select {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+  text-align: left;
+}
+
+.page { padding: 16px; flex: 1; }
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--green);
+  color: #fff;
+}
+.topbar a { color: #fff; }
+
+.navbar {
+  display: flex;
+  justify-content: space-around;
+  border-top: 1px solid var(--border);
+  padding: 8px 0;
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+}
+.navbar a { font-size: 13px; color: var(--muted); }
+.navbar a.active { color: var(--green); font-weight: 600; }
+
+.badge {
+  display: inline-block;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: var(--green-light);
+  color: var(--green);
+}
+.badge.pending { background: #fff3cd; color: #8a6d3b; }
+.error { color: var(--danger); font-size: 14px; }
+.muted { color: var(--muted); font-size: 14px; }
+
+.emergency-btn {
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  font-weight: 700;
+  position: fixed;
+  bottom: 70px;
+  right: max(16px, calc(50vw - 340px));
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  cursor: pointer;
+}
