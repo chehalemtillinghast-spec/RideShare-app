@@ -1,17 +1,42 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
+import { enablePush, disablePush, getPushSubscription, isPushSupported } from '../push';
 
 export default function Profile() {
   const { user, logout, refresh } = useAuth();
   const [contacts, setContacts] = useState([]);
   const [newContact, setNewContact] = useState({ name: '', phone: '', email: '', relationship: '' });
   const [bio, setBio] = useState(user.bio || '');
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushError, setPushError] = useState('');
 
   async function loadContacts() {
     setContacts(await api.get('/users/me/emergency-contacts'));
   }
   useEffect(() => { loadContacts(); }, []);
+  useEffect(() => {
+    isPushSupported().then((supported) => {
+      setPushSupported(supported);
+      if (supported) getPushSubscription().then((sub) => setPushEnabled(!!sub));
+    });
+  }, []);
+
+  async function togglePush() {
+    setPushError('');
+    try {
+      if (pushEnabled) {
+        await disablePush();
+        setPushEnabled(false);
+      } else {
+        await enablePush();
+        setPushEnabled(true);
+      }
+    } catch (err) {
+      setPushError(err.message);
+    }
+  }
 
   async function addContact(e) {
     e.preventDefault();
@@ -54,7 +79,26 @@ export default function Profile() {
       </div>
       <button className="btn secondary" onClick={saveBio}>Save bio</button>
 
+      <div className="card" style={{ marginTop: 24 }}>
+        <h2>Push notifications</h2>
+        <p className="muted">
+          Turn this on so you get notified immediately if a friend who lists you as an emergency contact triggers an alert.
+        </p>
+        {pushSupported ? (
+          <button className="btn secondary" onClick={togglePush}>
+            {pushEnabled ? 'Disable push notifications' : 'Enable push notifications'}
+          </button>
+        ) : (
+          <p className="muted">Push notifications aren't supported in this browser.</p>
+        )}
+        {pushError && <p className="error">{pushError}</p>}
+      </div>
+
       <h2 style={{ marginTop: 24 }}>Emergency contacts</h2>
+      <p className="muted">
+        If a contact below is also a Town Rides user (matched by phone or email), they'll be notified in-app and via
+        push if they triggered or were listed in an alert.
+      </p>
       {contacts.map((c) => (
         <div key={c.id} className="card">
           <p>{c.name} ({c.relationship}) — {c.phone} {c.email}</p>

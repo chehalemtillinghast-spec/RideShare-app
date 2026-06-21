@@ -12,6 +12,9 @@ import eventsRoutes from './routes/events.js';
 import flagsRoutes from './routes/flags.js';
 import emergencyRoutes from './routes/emergency.js';
 import adminRoutes from './routes/admin.js';
+import notificationsRoutes from './routes/notifications.js';
+import pushRoutes from './routes/push.js';
+import leaderboardRoutes from './routes/leaderboard.js';
 
 dotenv.config();
 
@@ -32,6 +35,9 @@ app.use('/api/events', eventsRoutes);
 app.use('/api/flags', flagsRoutes);
 app.use('/api/emergency', emergencyRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationsRoutes);
+app.use('/api/push', pushRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
 
 app.use((req, res) => res.status(404).json({ error: 'Not found.' }));
 

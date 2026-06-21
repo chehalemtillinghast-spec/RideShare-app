@@ -1,6 +1,7 @@
 import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import EmergencyButton from './EmergencyButton';
+import NotificationBadge from './NotificationBadge';
 
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -17,6 +18,8 @@ import Flag from './pages/Flag';
 import Profile from './pages/Profile';
 import History from './pages/History';
 import Admin from './pages/Admin';
+import Notifications from './pages/Notifications';
+import Leaderboard from './pages/Leaderboard';
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -41,7 +44,12 @@ export default function App() {
     <>
       <div className="topbar">
         <NavLink to="/">Town Rides</NavLink>
-        {user && <NavLink to="/profile">{user.full_name}</NavLink>}
+        {user && (
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <NotificationBadge />
+            <NavLink to="/profile">{user.full_name}</NavLink>
+          </div>
+        )}
       </div>
 
       <Routes>
@@ -59,6 +67,8 @@ export default function App() {
         <Route path="/flag" element={<PrivateRoute><Flag /></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
         <Route path="/history" element={<PrivateRoute><History /></PrivateRoute>} />
+        <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
+        <Route path="/leaderboard" element={<PrivateRoute><Leaderboard /></PrivateRoute>} />
         <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
       </Routes>
 
@@ -70,6 +80,7 @@ export default function App() {
           <NavLink to="/rides">Rides</NavLink>
           <NavLink to="/driver">Driver</NavLink>
           <NavLink to="/events">Events</NavLink>
+          <NavLink to="/leaderboard">Leaderboard</NavLink>
           <NavLink to="/profile">Profile</NavLink>
           {user.role === 'admin' && <NavLink to="/admin">Admin</NavLink>}
         </nav>

@@ -119,6 +119,39 @@ CREATE TABLE IF NOT EXISTS emergency_alerts (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Resolves each emergency contact against the users table at alert time,
+-- so we can both notify matched users and flag unreachable contacts to admins.
+CREATE TABLE IF NOT EXISTS alert_recipients (
+  id SERIAL PRIMARY KEY,
+  alert_id INTEGER NOT NULL REFERENCES emergency_alerts(id) ON DELETE CASCADE,
+  contact_id INTEGER NOT NULL REFERENCES emergency_contacts(id) ON DELETE CASCADE,
+  matched_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL DEFAULT 'general', -- emergency_alert | general
+  title TEXT NOT NULL,
+  body TEXT,
+  alert_id INTEGER REFERENCES emergency_alerts(id) ON DELETE CASCADE,
+  acknowledged_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  endpoint TEXT NOT NULL,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (user_id, endpoint)
+);
+
 CREATE INDEX IF NOT EXISTS idx_rides_status ON rides(status);
 CREATE INDEX IF NOT EXISTS idx_messages_ride ON messages(ride_id);
 CREATE INDEX IF NOT EXISTS idx_ride_requests_ride ON ride_requests(ride_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, acknowledged_at);
+CREATE INDEX IF NOT EXISTS idx_alert_recipients_alert ON alert_recipients(alert_id);

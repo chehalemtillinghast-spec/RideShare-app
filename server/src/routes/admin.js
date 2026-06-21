@@ -55,4 +55,23 @@ router.get('/rides', async (req, res) => {
   res.json(result.rows);
 });
 
+// Emergency contacts that couldn't be matched to a registered user when an
+// alert fired — these need a manual follow-up since no in-app/push
+// notification could be delivered.
+router.get('/unreachable-contacts', async (req, res) => {
+  const result = await pool.query(
+    `SELECT ar.id AS alert_recipient_id, ar.created_at,
+            ea.id AS alert_id, ea.message AS alert_message, ea.status AS alert_status,
+            triggerer.id AS triggerer_id, triggerer.full_name AS triggerer_name, triggerer.phone AS triggerer_phone,
+            ec.name AS contact_name, ec.phone AS contact_phone, ec.email AS contact_email, ec.relationship
+     FROM alert_recipients ar
+     JOIN emergency_alerts ea ON ea.id = ar.alert_id
+     JOIN users triggerer ON triggerer.id = ea.user_id
+     JOIN emergency_contacts ec ON ec.id = ar.contact_id
+     WHERE ar.matched_user_id IS NULL
+     ORDER BY ar.created_at DESC`
+  );
+  res.json(result.rows);
+});
+
 export default router;

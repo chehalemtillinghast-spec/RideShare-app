@@ -5,12 +5,14 @@ export default function Admin() {
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [flags, setFlags] = useState([]);
+  const [unreachable, setUnreachable] = useState([]);
   const [tab, setTab] = useState('stats');
 
   useEffect(() => {
     api.get('/admin/stats').then(setStats);
     api.get('/admin/users').then(setUsers);
     api.get('/flags').then(setFlags);
+    api.get('/admin/unreachable-contacts').then(setUnreachable);
   }, []);
 
   async function suspend(id, suspended) {
@@ -35,6 +37,9 @@ export default function Admin() {
         <button className="btn secondary" onClick={() => setTab('stats')}>Stats</button>
         <button className="btn secondary" onClick={() => setTab('users')}>Users</button>
         <button className="btn secondary" onClick={() => setTab('flags')}>Flags</button>
+        <button className="btn secondary" onClick={() => setTab('unreachable')}>
+          Unreachable contacts {unreachable.length > 0 && `(${unreachable.length})`}
+        </button>
       </div>
 
       {tab === 'stats' && stats && (
@@ -67,6 +72,25 @@ export default function Admin() {
           </select>
         </div>
       ))}
+
+      {tab === 'unreachable' && (
+        <>
+          {unreachable.length === 0 && <p className="muted">No unreachable emergency contacts on file.</p>}
+          {unreachable.map((u) => (
+            <div key={u.alert_recipient_id} className="card">
+              <p>
+                <strong>{u.triggerer_name}</strong> ({u.triggerer_phone || 'no phone on file'}) triggered an emergency alert
+                {u.alert_message && `: "${u.alert_message}"`} — their contact <strong>{u.contact_name}</strong>
+                {u.relationship && ` (${u.relationship})`} isn't a registered user and couldn't be notified in-app.
+              </p>
+              <p className="muted">
+                Reach them directly: {u.contact_phone || 'no phone'} {u.contact_email && `· ${u.contact_email}`}
+              </p>
+              <p className="muted">Alert status: {u.alert_status} · {new Date(u.created_at).toLocaleString()}</p>
+            </div>
+          ))}
+        </>
+      )}
     </div>
   );
 }
