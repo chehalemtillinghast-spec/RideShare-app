@@ -96,6 +96,36 @@ button, input, textarea, select {
 .error { color: var(--danger); font-size: 14px; }
 .muted { color: var(--muted); font-size: 14px; }
 
+.waking-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  background: #fff3cd;
+  color: #8a6d3b;
+  font-size: 13px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #e0c46c;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.waking-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #8a6d3b;
+  border-top-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  animation: waking-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes waking-spin {
+  to { transform: rotate(360deg); }
+}
+
 .emergency-btn {
   background: var(--danger);
   color: #fff;

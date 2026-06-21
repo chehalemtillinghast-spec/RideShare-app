@@ -2,6 +2,7 @@ import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import EmergencyButton from './EmergencyButton';
 import NotificationBadge from './NotificationBadge';
+import WakingBanner from './WakingBanner';
 
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -38,10 +39,18 @@ function AdminRoute({ children }) {
 export default function App() {
   const { user, loading } = useAuth();
 
-  if (loading) return <div className="page">Loading...</div>;
+  if (loading) {
+    return (
+      <>
+        <WakingBanner />
+        <div className="page">Loading...</div>
+      </>
+    );
+  }
 
   return (
     <>
+      <WakingBanner />
       <div className="topbar">
         <NavLink to="/">Town Rides</NavLink>
         {user && (
