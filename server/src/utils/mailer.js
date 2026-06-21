@@ -5,11 +5,16 @@ dotenv.config();
 
 const smtpConfigured = process.env.SMTP_USER && process.env.SMTP_PASS;
 
+const smtpPort = Number(process.env.SMTP_PORT) || 465;
+
 const transporter = smtpConfigured
   ? nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: Number(process.env.SMTP_PORT) || 465,
-      secure: true,
+      port: smtpPort,
+      // 465 is implicit TLS; 587 uses STARTTLS instead. Some hosts block
+      // outbound 465 (seen on Render's free tier) but allow 587.
+      secure: smtpPort === 465,
+      requireTLS: smtpPort !== 465,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
