@@ -34,8 +34,8 @@ router.post('/', requireAuth, async (req, res) => {
       const matchResult = await pool.query(
         `SELECT id FROM users
          WHERE id <> $1 AND (
-           (phone IS NOT NULL AND phone = $2) OR
-           (email IS NOT NULL AND $3 IS NOT NULL AND email = LOWER($3))
+           (phone IS NOT NULL AND phone = $2::text) OR
+           (email IS NOT NULL AND $3::text IS NOT NULL AND email = LOWER($3::text))
          ) LIMIT 1`,
         [req.user.id, contact.phone || null, contact.email || null]
       );
