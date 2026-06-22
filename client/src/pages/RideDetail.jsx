@@ -76,13 +76,21 @@ export default function RideDetail() {
       {ride.notes && <p className="muted">{ride.notes}</p>}
 
       {!isOwner && !myRequest && ride.status === 'open' && (
-        <button className="btn" onClick={requestRide}>Request this ride</button>
+        <>
+          <button className="btn" onClick={requestRide}>
+            {ride.creator_role === 'driver' ? 'Connect with this driver' : 'Connect with this rider'}
+          </button>
+          <p className="muted">
+            This sends a request and opens up messaging — {ride.creator_role === 'driver' ? 'the driver' : 'the rider'} can
+            chat with you before deciding.
+          </p>
+        </>
       )}
       {myRequest && <p className="muted">Your request status: {myRequest.status}</p>}
 
       {isOwner && (
         <>
-          <h2>Requests</h2>
+          <h2>Connection requests</h2>
           {ride.requests.length === 0 && <p className="muted">No requests yet.</p>}
           {ride.requests.map((r) => (
             <div key={r.id} className="card">
