@@ -2,6 +2,14 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { api } from '../api';
 
+const PAGE_CLS = 'flex flex-col min-h-[calc(100vh-56px)] px-5 pt-10 pb-6 bg-background';
+const HEADING_CLS = 'text-2xl font-black text-foreground mb-1';
+const INPUT_CLS =
+  'w-full px-4 py-3 bg-secondary rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-colors';
+const LABEL_CLS = 'text-[11px] font-bold text-muted-foreground uppercase tracking-widest block mb-1.5';
+const BUTTON_CLS =
+  'w-full bg-accent text-white rounded-2xl py-3.5 font-bold text-sm shadow-lg hover:bg-accent/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-50 disabled:active:scale-100';
+
 export default function ResetPassword() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
@@ -32,38 +40,72 @@ export default function ResetPassword() {
 
   if (!token) {
     return (
-      <div className="page">
-        <h1>Invalid reset link</h1>
-        <p className="muted">This link is missing its reset token. Request a new one from the login page.</p>
-        <Link to="/forgot-password">Request a new link</Link>
+      <div className={PAGE_CLS}>
+        <h1 className={HEADING_CLS} style={{ fontFamily: 'var(--font-display)' }}>
+          Invalid reset link
+        </h1>
+        <p className="text-sm text-muted-foreground mb-5">
+          This link is missing its reset token. Request a new one from the login page.
+        </p>
+        <Link to="/forgot-password" className="text-accent font-semibold text-sm hover:opacity-70 transition-opacity">
+          Request a new link
+        </Link>
       </div>
     );
   }
 
   if (done) {
     return (
-      <div className="page">
-        <h1>Password updated</h1>
-        <p className="muted">You can now log in with your new password.</p>
-        <button className="btn" onClick={() => navigate('/login')}>Go to login</button>
+      <div className={PAGE_CLS}>
+        <h1 className={HEADING_CLS} style={{ fontFamily: 'var(--font-display)' }}>
+          Password updated
+        </h1>
+        <p className="text-sm text-muted-foreground mb-5">
+          You can now log in with your new password.
+        </p>
+        <button
+          onClick={() => navigate('/login')}
+          className={BUTTON_CLS}
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
+          Go to login
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="page">
-      <h1>Choose a new password</h1>
-      <form onSubmit={onSubmit}>
-        <div className="field">
-          <label>New password (8+ characters)</label>
-          <input type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
+    <div className={PAGE_CLS}>
+      <h1 className={`${HEADING_CLS} mb-6`} style={{ fontFamily: 'var(--font-display)' }}>
+        Choose a new password
+      </h1>
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div>
+          <label className={LABEL_CLS}>New password (8+ characters)</label>
+          <input
+            type="password"
+            required
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className={INPUT_CLS}
+          />
         </div>
-        <div className="field">
-          <label>Confirm new password</label>
-          <input type="password" required minLength={8} value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+        <div>
+          <label className={LABEL_CLS}>Confirm new password</label>
+          <input
+            type="password"
+            required
+            minLength={8}
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            className={INPUT_CLS}
+          />
         </div>
-        {error && <p className="error">{error}</p>}
-        <button className="btn" type="submit" disabled={loading}>
+
+        {error && <p className="text-sm text-destructive">{error}</p>}
+
+        <button type="submit" disabled={loading} className={BUTTON_CLS} style={{ fontFamily: 'var(--font-display)' }}>
           {loading ? 'Saving...' : 'Save new password'}
         </button>
       </form>

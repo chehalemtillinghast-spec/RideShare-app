@@ -1,12 +1,55 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted-bg);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--danger);
+  --color-destructive-foreground: #ffffff;
+  --color-border: var(--border);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
 :root {
+  --font-sans: 'Outfit', sans-serif;
+  --font-display: 'Nunito', sans-serif;
+  --background: #FDF7F2;
+  --foreground: #1A0F07;
+  --card: #FFFFFF;
+  --card-foreground: #1A0F07;
+  --primary: #1A0F07;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F5EAE0;
+  --secondary-foreground: #1A0F07;
+  --muted-bg: #EDE0D4;
+  --muted-foreground: #8C6B55;
+  --accent: #E8703A;
+  --accent-foreground: #FFFFFF;
+  --radius: 0.875rem;
+
+  /* legacy aliases kept so existing plain-CSS classes below keep working */
   --green: #2d6a4f;
   --green-light: #d8f3dc;
-  --text: #1b1b1b;
-  --muted: #666;
-  --border: #ddd;
-  --bg: #fafafa;
-  --danger: #c0392b;
-  font: 16px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
+  --text: #1A0F07;
+  --muted: #8C6B55;
+  --border: rgba(26, 15, 7, 0.1);
+  --bg: #FDF7F2;
+  --danger: #C0392B;
+  font: 16px/1.5 var(--font-sans);
   color: var(--text);
   background: var(--bg);
 }

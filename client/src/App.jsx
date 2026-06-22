@@ -38,6 +38,11 @@ function AdminRoute({ children }) {
   return children;
 }
 
+const navLinkCls = ({ isActive }) =>
+  `flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-semibold transition-colors ${
+    isActive ? 'text-accent' : 'text-muted-foreground'
+  }`;
+
 export default function App() {
   const { user, loading } = useAuth();
 
@@ -45,7 +50,9 @@ export default function App() {
     return (
       <>
         <WakingBanner />
-        <div className="page">Loading...</div>
+        <div className="flex items-center justify-center min-h-screen text-sm text-muted-foreground bg-background">
+          Loading...
+        </div>
       </>
     );
   }
@@ -53,12 +60,20 @@ export default function App() {
   return (
     <>
       <WakingBanner />
-      <div className="topbar">
-        <NavLink to="/">Town Rides</NavLink>
+      <div className="flex items-center justify-between px-5 py-3.5 bg-background border-b border-border">
+        <NavLink
+          to="/"
+          className="text-lg font-black text-foreground"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
+          Town Rides
+        </NavLink>
         {user && (
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <div className="flex items-center gap-3">
             <NotificationBadge />
-            <NavLink to="/profile">{user.full_name}</NavLink>
+            <NavLink to="/profile" className="text-sm font-semibold text-foreground hover:text-accent transition-colors">
+              {user.full_name}
+            </NavLink>
           </div>
         )}
       </div>
@@ -88,16 +103,16 @@ export default function App() {
       {user && <EmergencyButton />}
 
       {user && (
-        <nav className="navbar">
-          <NavLink to="/" end>Home</NavLink>
-          <NavLink to="/rides">Rides</NavLink>
-          <NavLink to="/driver">Driver</NavLink>
-          <NavLink to="/events">Events</NavLink>
-          <NavLink to="/leaderboard">Leaderboard</NavLink>
-          <NavLink to="/history">My Rides</NavLink>
-          <NavLink to="/messages">Messages</NavLink>
-          <NavLink to="/profile">Profile</NavLink>
-          {user.role === 'admin' && <NavLink to="/admin">Admin</NavLink>}
+        <nav className="flex border-t border-border bg-background sticky bottom-0 overflow-x-auto">
+          <NavLink to="/" end className={navLinkCls}>Home</NavLink>
+          <NavLink to="/rides" className={navLinkCls}>Rides</NavLink>
+          <NavLink to="/driver" className={navLinkCls}>Driver</NavLink>
+          <NavLink to="/events" className={navLinkCls}>Events</NavLink>
+          <NavLink to="/leaderboard" className={navLinkCls}>Top</NavLink>
+          <NavLink to="/history" className={navLinkCls}>My Rides</NavLink>
+          <NavLink to="/messages" className={navLinkCls}>Messages</NavLink>
+          <NavLink to="/profile" className={navLinkCls}>Profile</NavLink>
+          {user.role === 'admin' && <NavLink to="/admin" className={navLinkCls}>Admin</NavLink>}
         </nav>
       )}
     </>

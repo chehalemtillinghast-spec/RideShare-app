@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { Bell } from 'lucide-react';
 import { api } from './api';
 import { onSocketEvent } from './socket';
 
@@ -25,15 +26,10 @@ export default function NotificationBadge() {
   }, []);
 
   return (
-    <NavLink to="/notifications" style={{ position: 'relative' }}>
-      Alerts
+    <NavLink to="/notifications" className="relative w-9 h-9 rounded-full bg-secondary flex items-center justify-center hover:bg-muted transition-colors">
+      <Bell className="w-4 h-4 text-foreground" />
       {count > 0 && (
-        <span
-          style={{
-            background: '#c0392b', color: '#fff', borderRadius: 10,
-            fontSize: 11, padding: '1px 6px', marginLeft: 4,
-          }}
-        >
+        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-destructive text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-background">
           {count}
         </span>
       )}

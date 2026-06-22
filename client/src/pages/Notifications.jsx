@@ -29,35 +29,51 @@ export default function Notifications() {
   }
 
   return (
-    <div className="page">
-      <h1>Notifications</h1>
-      {error && <p className="error">{error}</p>}
-      {notifications.some((n) => !n.acknowledged_at) && (
-        <button className="btn secondary" onClick={acknowledgeAll}>Mark all as read</button>
-      )}
-      {notifications.length === 0 && <p className="muted">No notifications yet.</p>}
-      {notifications.map((n) => (
-        <div
-          key={n.id}
-          className="card"
-          style={{ background: n.acknowledged_at ? '#fff' : '#fff3cd', borderColor: n.acknowledged_at ? undefined : '#e0c46c' }}
-        >
-          <h3>{n.title}</h3>
-          <p>{n.body}</p>
-          <p className="muted">{new Date(n.created_at).toLocaleString()}</p>
-          {n.type === 'message' && n.related_user_id && (
-            <Link
-              to={`/messages?with=${n.related_user_id}${n.ride_id ? `&ride_id=${n.ride_id}` : ''}`}
-              onClick={() => !n.acknowledged_at && acknowledge(n.id)}
-            >
-              Open conversation
-            </Link>
-          )}
-          {!n.acknowledged_at && (
-            <button className="btn secondary" onClick={() => acknowledge(n.id)}>Acknowledge</button>
-          )}
-        </div>
-      ))}
+    <div className="flex flex-col bg-background min-h-[calc(100vh-56px)]">
+      <div className="px-5 pt-8 pb-4 flex items-center justify-between">
+        <h1 className="text-2xl font-black text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
+          Notifications
+        </h1>
+        {notifications.some((n) => !n.acknowledged_at) && (
+          <button onClick={acknowledgeAll} className="text-xs font-bold text-accent hover:opacity-70 transition-opacity">
+            Mark all as read
+          </button>
+        )}
+      </div>
+
+      <div className="flex-1 px-4 pb-6 space-y-3">
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        {notifications.length === 0 && !error && <p className="text-sm text-muted-foreground">No notifications yet.</p>}
+
+        {notifications.map((n) => (
+          <div
+            key={n.id}
+            className={`rounded-2xl p-4 border shadow-sm ${
+              n.acknowledged_at ? 'bg-card border-border' : 'bg-accent/5 border-accent/30'
+            }`}
+          >
+            <h3 className="font-bold text-sm text-foreground" style={{ fontFamily: 'var(--font-display)' }}>{n.title}</h3>
+            <p className="text-sm text-foreground mt-1">{n.body}</p>
+            <p className="text-xs text-muted-foreground mt-1.5">{new Date(n.created_at).toLocaleString()}</p>
+            <div className="flex items-center gap-3 mt-2">
+              {n.type === 'message' && n.related_user_id && (
+                <Link
+                  to={`/messages?with=${n.related_user_id}${n.ride_id ? `&ride_id=${n.ride_id}` : ''}`}
+                  onClick={() => !n.acknowledged_at && acknowledge(n.id)}
+                  className="text-xs font-bold text-accent hover:opacity-70 transition-opacity"
+                >
+                  Open conversation
+                </Link>
+              )}
+              {!n.acknowledged_at && (
+                <button onClick={() => acknowledge(n.id)} className="text-xs font-bold text-foreground hover:opacity-70 transition-opacity">
+                  Acknowledge
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
