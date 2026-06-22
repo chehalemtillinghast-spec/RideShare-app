@@ -1,6 +1,7 @@
 import express from 'express';
 import { pool } from '../db/pool.js';
 import { requireAuth } from '../middleware/auth.js';
+import { emitToUser } from '../socket.js';
 
 const router = express.Router();
 
@@ -51,7 +52,10 @@ router.post('/', requireAuth, async (req, res) => {
     `INSERT INTO messages (ride_id, sender_id, recipient_id, body) VALUES ($1, $2, $3, $4) RETURNING *`,
     [ride_id || null, req.user.id, recipient_id, body]
   );
-  res.status(201).json(result.rows[0]);
+  const message = result.rows[0];
+  emitToUser(recipient_id, 'message:new', message);
+  emitToUser(req.user.id, 'message:new', message); // syncs the sender's other open devices/tabs
+  res.status(201).json(message);
 });
 
 export default router;

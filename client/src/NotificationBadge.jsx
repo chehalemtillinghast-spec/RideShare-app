@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { api } from './api';
+import { onSocketEvent } from './socket';
 
 export default function NotificationBadge() {
   const [count, setCount] = useState(0);
@@ -16,8 +17,11 @@ export default function NotificationBadge() {
       }
     }
     poll();
-    const interval = setInterval(poll, 30000);
-    return () => { active = false; clearInterval(interval); };
+    // Socket gives near-instant updates; this interval is just a safety net
+    // in case a socket event is missed (e.g. brief disconnect/reconnect gap).
+    const interval = setInterval(poll, 60000);
+    const offNotification = onSocketEvent('notification:new', () => poll());
+    return () => { active = false; clearInterval(interval); offNotification(); };
   }, []);
 
   return (

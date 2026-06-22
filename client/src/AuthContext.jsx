@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { api, getToken, setToken } from './api';
+import { connectSocket, disconnectSocket } from './socket';
 
 const AuthContext = createContext(null);
 
@@ -28,6 +29,14 @@ export function AuthProvider({ children }) {
     loadUser();
   }, [loadUser]);
 
+  useEffect(() => {
+    if (user) {
+      connectSocket();
+    } else {
+      disconnectSocket();
+    }
+  }, [user]);
+
   async function login(email, password) {
     const data = await api.public.post('/auth/login', { email, password });
     setToken(data.token);
@@ -45,6 +54,7 @@ export function AuthProvider({ children }) {
   function logout() {
     setToken(null);
     setUser(null);
+    disconnectSocket();
   }
 
   return (

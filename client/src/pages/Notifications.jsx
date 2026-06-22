@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
+import { onSocketEvent } from '../socket';
 
 export default function Notifications() {
   const [notifications, setNotifications] = useState([]);
@@ -14,6 +15,7 @@ export default function Notifications() {
   }
 
   useEffect(() => { load(); }, []);
+  useEffect(() => onSocketEvent('notification:new', () => load()), []);
 
   async function acknowledge(id) {
     await api.patch(`/notifications/${id}/acknowledge`, {});

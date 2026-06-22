@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
+import { onSocketEvent } from '../socket';
 
 export default function Rides() {
   const [rides, setRides] = useState([]);
   const [error, setError] = useState('');
 
-  useEffect(() => {
+  function load() {
     api.get('/rides?ride_type=posted&status=open').then(setRides).catch((e) => setError(e.message));
-  }, []);
+  }
+
+  useEffect(() => { load(); }, []);
+  useEffect(() => onSocketEvent('rides:changed', load), []);
 
   return (
     <div className="page">

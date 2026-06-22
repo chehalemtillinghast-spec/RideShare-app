@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
+import { onSocketEvent } from '../socket';
 
 export default function Messages() {
   const { user } = useAuth();
@@ -20,6 +21,15 @@ export default function Messages() {
   }
 
   useEffect(() => { load(); }, [otherId, rideId]);
+
+  useEffect(() => {
+    return onSocketEvent('message:new', (message) => {
+      const isThisThread =
+        (message.sender_id === Number(otherId) || message.recipient_id === Number(otherId)) &&
+        (!rideId || message.ride_id === Number(rideId));
+      if (isThisThread) load();
+    });
+  }, [otherId, rideId]);
 
   async function send(e) {
     e.preventDefault();

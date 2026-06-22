@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcrypt';
 import { pool } from '../db/pool.js';
 import { requireAuth } from '../middleware/auth.js';
+import { emitToAll } from '../socket.js';
 
 const router = express.Router();
 
@@ -47,6 +48,7 @@ router.post('/me/driver-availability', requireAuth, async (req, res) => {
     `UPDATE users SET is_designated_driver = TRUE, driver_available = $1 WHERE id = $2 RETURNING *`,
     [!!available, req.user.id]
   );
+  emitToAll('drivers:changed', {});
   res.json(publicUser(result.rows[0]));
 });
 

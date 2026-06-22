@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
+import { onSocketEvent } from '../socket';
 
 export default function RideDetail() {
   const { id } = useParams();
@@ -22,6 +23,14 @@ export default function RideDetail() {
   }
 
   useEffect(() => { load(); }, [id]);
+
+  useEffect(() => {
+    const offUpdated = onSocketEvent('ride:updated', (e) => { if (String(e.rideId) === id) load(); });
+    const offChanged = onSocketEvent('rides:changed', (e) => { if (String(e.rideId) === id) load(); });
+    const offReqNew = onSocketEvent('ride:request:new', (e) => { if (String(e.rideId) === id) load(); });
+    const offReqUpdated = onSocketEvent('ride:request:updated', (e) => { if (String(e.rideId) === id) load(); });
+    return () => { offUpdated(); offChanged(); offReqNew(); offReqUpdated(); };
+  }, [id]);
 
   if (error) return <div className="page"><p className="error">{error}</p></div>;
   if (!ride) return <div className="page">Loading...</div>;

@@ -2,6 +2,7 @@ import express from 'express';
 import { pool } from '../db/pool.js';
 import { requireAuth } from '../middleware/auth.js';
 import { sendPushToUser } from '../utils/push.js';
+import { emitToUser } from '../socket.js';
 
 const router = express.Router();
 
@@ -54,6 +55,7 @@ router.post('/', requireAuth, async (req, res) => {
         [matchedUserId, title, body, alert.id]
       );
       sendPushToUser(matchedUserId, { title, body, notificationId: notification.rows[0].id }).catch(() => {});
+      emitToUser(matchedUserId, 'notification:new', notification.rows[0]);
       notifiedUserIds.push(matchedUserId);
     } else {
       unreachableContacts.push(contact);

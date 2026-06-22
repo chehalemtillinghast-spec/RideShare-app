@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
+import { onSocketEvent } from '../socket';
 
 export default function DesignatedDriver() {
   const { user, refresh } = useAuth();
@@ -10,9 +11,12 @@ export default function DesignatedDriver() {
   const [error, setError] = useState('');
   const [request, setRequest] = useState({ origin: '', destination: '', notes: '' });
 
-  useEffect(() => {
+  function loadDrivers() {
     api.get('/users/drivers/available').then(setDrivers).catch((e) => setError(e.message));
-  }, []);
+  }
+
+  useEffect(() => { loadDrivers(); }, []);
+  useEffect(() => onSocketEvent('drivers:changed', loadDrivers), []);
 
   async function toggleAvailable() {
     await api.post('/users/me/driver-availability', { available: !user.driver_available });

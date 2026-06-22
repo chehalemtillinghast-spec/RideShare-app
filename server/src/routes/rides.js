@@ -1,6 +1,7 @@
 import express from 'express';
 import { pool } from '../db/pool.js';
 import { requireAuth } from '../middleware/auth.js';
+import { emitToAll, emitToUser } from '../socket.js';
 
 const router = express.Router();
 
@@ -76,7 +77,9 @@ router.post('/', requireAuth, async (req, res) => {
       notes || null, !!is_recurring, recurrence_rule || null, event_id || null,
     ]
   );
-  res.status(201).json(result.rows[0]);
+  const ride = result.rows[0];
+  emitToAll('rides:changed', { rideId: ride.id });
+  res.status(201).json(ride);
 });
 
 router.patch('/:id', requireAuth, async (req, res) => {
@@ -95,6 +98,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
      WHERE id = $5 RETURNING *`,
     [status, available_seats, departure_time, notes, req.params.id]
   );
+  emitToAll('rides:changed', { rideId: req.params.id });
   res.json(result.rows[0]);
 });
 
@@ -111,6 +115,7 @@ router.post('/:id/requests', requireAuth, async (req, res) => {
     `INSERT INTO ride_requests (ride_id, requester_id, seats_requested) VALUES ($1, $2, $3) RETURNING *`,
     [req.params.id, req.user.id, seats_requested]
   );
+  emitToUser(ride.creator_id, 'ride:request:new', { rideId: ride.id });
   res.status(201).json(result.rows[0]);
 });
 
@@ -145,8 +150,11 @@ router.patch('/:id/requests/:requestId', requireAuth, async (req, res) => {
       `UPDATE rides SET available_seats = $1, status = CASE WHEN $1 <= 0 THEN 'full' ELSE status END WHERE id = $2`,
       [Math.max(remainingSeats, 0), ride.id]
     );
+    emitToAll('rides:changed', { rideId: ride.id });
   }
 
+  emitToUser(ride.creator_id, 'ride:request:updated', { rideId: ride.id });
+  emitToUser(request.requester_id, 'ride:request:updated', { rideId: ride.id });
   res.json(updated.rows[0]);
 });
 
@@ -172,6 +180,7 @@ router.post('/instant-request', requireAuth, async (req, res) => {
     `INSERT INTO ride_requests (ride_id, requester_id, seats_requested) VALUES ($1, $2, 1) RETURNING *`,
     [ride.id, req.user.id]
   );
+  emitToUser(driver_id, 'ride:request:new', { rideId: ride.id });
   res.status(201).json({ ride, request: requestResult.rows[0] });
 });
 
