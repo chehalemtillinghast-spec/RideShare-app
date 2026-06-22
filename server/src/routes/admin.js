@@ -1,6 +1,7 @@
 import express from 'express';
 import { pool } from '../db/pool.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
+import { sendAccountSuspendedEmail, sendAccountDeletedEmail } from '../utils/mailer.js';
 
 const router = express.Router();
 router.use(requireAuth, requireAdmin);
@@ -30,10 +31,17 @@ router.get('/users', async (req, res) => {
 router.patch('/users/:id/suspend', async (req, res) => {
   const { suspended } = req.body;
   const result = await pool.query(
-    'UPDATE users SET is_suspended = $1 WHERE id = $2 RETURNING id, email, is_suspended',
+    'UPDATE users SET is_suspended = $1 WHERE id = $2 RETURNING id, email, full_name, is_suspended',
     [!!suspended, req.params.id]
   );
-  res.json(result.rows[0]);
+  const user = result.rows[0];
+  if (!user) return res.status(404).json({ error: 'User not found.' });
+  if (user.is_suspended) {
+    sendAccountSuspendedEmail(user.email, user.full_name).catch((err) => {
+      console.error('Failed to send suspension email:', err.message);
+    });
+  }
+  res.json(user);
 });
 
 router.patch('/users/:id/verify', async (req, res) => {
@@ -55,9 +63,13 @@ router.delete('/users/:id', async (req, res) => {
   if (Number(req.params.id) === req.user.id) {
     return res.status(400).json({ error: 'Use "Delete my account" in your own profile instead.' });
   }
-  const result = await pool.query('DELETE FROM users WHERE id = $1 RETURNING id, email', [req.params.id]);
-  if (!result.rows[0]) return res.status(404).json({ error: 'User not found.' });
-  res.json({ ok: true, deleted: result.rows[0] });
+  const result = await pool.query('DELETE FROM users WHERE id = $1 RETURNING id, email, full_name', [req.params.id]);
+  const deleted = result.rows[0];
+  if (!deleted) return res.status(404).json({ error: 'User not found.' });
+  sendAccountDeletedEmail(deleted.email, deleted.full_name).catch((err) => {
+    console.error('Failed to send account-deleted email:', err.message);
+  });
+  res.json({ ok: true, deleted });
 });
 
 router.get('/rides', async (req, res) => {
