@@ -94,6 +94,8 @@ export default function App() {
           <NavLink to="/driver">Driver</NavLink>
           <NavLink to="/events">Events</NavLink>
           <NavLink to="/leaderboard">Leaderboard</NavLink>
+          <NavLink to="/history">My Rides</NavLink>
+          <NavLink to="/messages">Messages</NavLink>
           <NavLink to="/profile">Profile</NavLink>
           {user.role === 'admin' && <NavLink to="/admin">Admin</NavLink>}
         </nav>

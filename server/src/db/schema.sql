@@ -132,13 +132,21 @@ CREATE TABLE IF NOT EXISTS alert_recipients (
 CREATE TABLE IF NOT EXISTS notifications (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  type TEXT NOT NULL DEFAULT 'general', -- emergency_alert | general
+  type TEXT NOT NULL DEFAULT 'general', -- emergency_alert | message | general
   title TEXT NOT NULL,
   body TEXT,
   alert_id INTEGER REFERENCES emergency_alerts(id) ON DELETE CASCADE,
+  related_user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  ride_id INTEGER REFERENCES rides(id) ON DELETE CASCADE,
   acknowledged_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Added after the initial notifications table shipped — keeps existing rows
+-- intact while letting new (e.g. message) notifications link back to the
+-- other party/ride so they can be auto-acknowledged once that thread is read.
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS related_user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS ride_id INTEGER REFERENCES rides(id) ON DELETE CASCADE;
 
 CREATE TABLE IF NOT EXISTS push_subscriptions (
   id SERIAL PRIMARY KEY,

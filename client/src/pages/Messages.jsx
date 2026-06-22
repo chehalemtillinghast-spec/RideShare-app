@@ -1,20 +1,58 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
 import { onSocketEvent } from '../socket';
 
-export default function Messages() {
+function truncate(text, max) {
+  return text.length > max ? `${text.slice(0, max)}...` : text;
+}
+
+function MessagesInbox() {
+  const [conversations, setConversations] = useState([]);
+  const [error, setError] = useState('');
+
+  function load() {
+    api.get('/messages/conversations').then(setConversations).catch((e) => setError(e.message));
+  }
+
+  useEffect(() => { load(); }, []);
+  useEffect(() => onSocketEvent('message:new', load), []);
+
+  return (
+    <div className="page">
+      <h1>Messages</h1>
+      {error && <p className="error">{error}</p>}
+      {conversations.length === 0 && <p className="muted">No conversations yet. Open a ride to message a driver or rider.</p>}
+      {conversations.map((c) => (
+        <Link
+          key={`${c.other_id}-${c.ride_id || 'general'}`}
+          to={`/messages?with=${c.other_id}${c.ride_id ? `&ride_id=${c.ride_id}` : ''}`}
+          style={{ display: 'block' }}
+        >
+          <div className="card" style={{ background: c.unread_count > 0 ? '#fff3cd' : '#fff' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <strong>
+                {c.other_name} {c.other_verification === 'verified' && <span className="badge">Verified</span>}
+              </strong>
+              <span className="muted" style={{ fontSize: 12 }}>{new Date(c.last_message_at).toLocaleString()}</span>
+            </div>
+            <p className="muted">{truncate(c.last_body, 80)}</p>
+            {c.unread_count > 0 && <span className="badge pending">{c.unread_count} unread</span>}
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function MessageThread({ otherId, rideId }) {
   const { user } = useAuth();
-  const [params] = useSearchParams();
-  const otherId = params.get('with');
-  const rideId = params.get('ride_id');
   const [messages, setMessages] = useState([]);
   const [body, setBody] = useState('');
   const [error, setError] = useState('');
 
   async function load() {
-    if (!otherId) return;
     const query = rideId ? `?with=${otherId}&ride_id=${rideId}` : `?with=${otherId}`;
     const data = await api.get(`/messages/thread${query}`);
     setMessages(data);
@@ -43,12 +81,9 @@ export default function Messages() {
     }
   }
 
-  if (!otherId) {
-    return <div className="page"><p className="muted">Open a ride to start a conversation with a driver or rider.</p></div>;
-  }
-
   return (
     <div className="page">
+      <Link to="/messages" className="muted">&larr; All conversations</Link>
       <h1>Conversation</h1>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
         {messages.map((m) => (
@@ -70,4 +105,13 @@ export default function Messages() {
       {error && <p className="error">{error}</p>}
     </div>
   );
+}
+
+export default function Messages() {
+  const [params] = useSearchParams();
+  const otherId = params.get('with');
+  const rideId = params.get('ride_id');
+
+  if (!otherId) return <MessagesInbox />;
+  return <MessageThread otherId={otherId} rideId={rideId} />;
 }

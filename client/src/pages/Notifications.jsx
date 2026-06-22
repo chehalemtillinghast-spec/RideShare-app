@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { onSocketEvent } from '../socket';
 
@@ -44,6 +45,14 @@ export default function Notifications() {
           <h3>{n.title}</h3>
           <p>{n.body}</p>
           <p className="muted">{new Date(n.created_at).toLocaleString()}</p>
+          {n.type === 'message' && n.related_user_id && (
+            <Link
+              to={`/messages?with=${n.related_user_id}${n.ride_id ? `&ride_id=${n.ride_id}` : ''}`}
+              onClick={() => !n.acknowledged_at && acknowledge(n.id)}
+            >
+              Open conversation
+            </Link>
+          )}
           {!n.acknowledged_at && (
             <button className="btn secondary" onClick={() => acknowledge(n.id)}>Acknowledge</button>
           )}

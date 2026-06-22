@@ -1,17 +1,22 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
+import { onSocketEvent } from '../socket';
 
 export default function History() {
   const [rides, setRides] = useState([]);
 
-  useEffect(() => {
+  function load() {
     api.get('/rides/mine').then(setRides);
-  }, []);
+  }
+
+  useEffect(() => { load(); }, []);
+  useEffect(() => onSocketEvent('rides:changed', load), []);
 
   return (
     <div className="page">
-      <h1>Your ride history</h1>
+      <h1>My rides</h1>
+      <p className="muted">Rides you've posted or offered.</p>
       {rides.length === 0 && <p className="muted">You haven't posted any rides yet.</p>}
       {rides.map((r) => (
         <Link key={r.id} to={`/rides/${r.id}`} style={{ display: 'block' }}>
