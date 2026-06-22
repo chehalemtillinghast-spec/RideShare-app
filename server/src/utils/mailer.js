@@ -1,40 +1,17 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const smtpConfigured = process.env.SMTP_USER && process.env.SMTP_PASS;
-
-const smtpPort = Number(process.env.SMTP_PORT) || 465;
-
-const transporter = smtpConfigured
-  ? nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: smtpPort,
-      // 465 is implicit TLS; 587 uses STARTTLS instead. Some hosts block
-      // outbound 465 (seen on Render's free tier) but allow 587.
-      secure: smtpPort === 465,
-      requireTLS: smtpPort !== 465,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-      // Without these, a stalled SMTP connection (e.g. a host blocking or
-      // rate-limiting outbound mail ports) hangs nodemailer indefinitely,
-      // which in turn hangs the HTTP request that triggered the send.
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
-    })
-  : null;
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 export async function sendPasswordResetEmail(toEmail, resetUrl) {
-  if (!transporter) {
-    console.warn(`SMTP not configured — would have emailed reset link to ${toEmail}: ${resetUrl}`);
+  if (!resend) {
+    console.warn(`RESEND_API_KEY not configured — would have emailed reset link to ${toEmail}: ${resetUrl}`);
     return;
   }
-  await transporter.sendMail({
-    from: process.env.SMTP_FROM || process.env.SMTP_USER,
+  const { error } = await resend.emails.send({
+    from: process.env.RESEND_FROM || 'Town Rides <onboarding@resend.dev>',
     to: toEmail,
     subject: 'Reset your Town Rides password',
     text: `We received a request to reset your Town Rides password. Open this link to choose a new one (expires in 1 hour):\n\n${resetUrl}\n\nIf you didn't request this, you can ignore this email.`,
@@ -44,4 +21,7 @@ export async function sendPasswordResetEmail(toEmail, resetUrl) {
       <p>If you didn't request this, you can ignore this email.</p>
     `,
   });
+  if (error) {
+    throw new Error(error.message || 'Resend failed to send the email.');
+  }
 }
