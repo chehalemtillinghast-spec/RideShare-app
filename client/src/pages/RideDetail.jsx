@@ -1,27 +1,21 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { MapPin, Navigation, Clock, Users, MessageCircle, BadgeCheck } from 'lucide-react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { MessageCircle, Clock, Users } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
 import { onSocketEvent } from '../socket';
+import { Avatar, Verified, Stars } from '../components/primitives';
 
 const cardCls = 'bg-card rounded-2xl p-4 border border-border shadow-sm';
 const labelCls = 'text-[11px] font-bold text-muted-foreground uppercase tracking-widest block mb-1.5';
 const inputCls =
   'w-full px-4 py-3 bg-secondary rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-colors';
-const btnPrimary =
-  'bg-accent text-white rounded-2xl py-3.5 px-5 font-bold text-sm shadow-lg hover:bg-accent/90 active:scale-[0.985] transition-all duration-150';
 const btnSecondary =
   'bg-secondary text-foreground rounded-2xl py-3.5 px-5 font-bold text-sm border border-border hover:bg-muted transition-colors';
 
-function StatusBadge({ status }) {
-  return (
-    <span className="text-xs font-bold text-accent bg-accent/10 px-2.5 py-1 rounded-full capitalize">{status}</span>
-  );
-}
-
 export default function RideDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [ride, setRide] = useState(null);
   const [error, setError] = useState('');
@@ -79,25 +73,66 @@ export default function RideDetail() {
 
   return (
     <div className="flex flex-col bg-background min-h-[calc(100vh-56px)]">
-      <div className="px-5 pt-8 pb-4">
-        <h1 className="text-xl font-black text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
-          {ride.origin} → {ride.destination}
-        </h1>
-        <div className="flex items-center gap-1.5 mt-1">
-          <p className="text-sm text-muted-foreground">
-            Posted by {ride.creator_name} as {ride.creator_role}
-          </p>
-          {ride.creator_verification === 'verified' && (
-            <BadgeCheck className="w-3.5 h-3.5 text-[#2E8B7A]" strokeWidth={2.5} />
-          )}
+      {/* Map placeholder, matching the Figma route illustration */}
+      <div className="relative h-52 bg-[#C8DFC8] shrink-0 overflow-hidden">
+        <svg viewBox="0 0 390 208" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid slice">
+          <rect width="390" height="208" fill="#C8DFC8" />
+          <path d="M0 104 C80 85 160 120 240 100 C300 85 350 110 390 100" stroke="#B0CDB0" strokeWidth="14" fill="none" />
+          <path d="M0 155 C100 148 250 160 390 152" stroke="#B0CDB0" strokeWidth="7" fill="none" />
+          <path d="M195 0 C192 70 196 140 195 208" stroke="#B0CDB0" strokeWidth="9" fill="none" />
+          <rect x="60" y="55" width="50" height="30" rx="4" fill="#AAC8AA" opacity="0.6" />
+          <rect x="280" y="70" width="45" height="25" rx="4" fill="#AAC8AA" opacity="0.6" />
+          <rect x="150" y="130" width="60" height="35" rx="4" fill="#AAC8AA" opacity="0.5" />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-accent rounded-full shadow-lg border-2 border-white" />
+            <div className="w-20 border-t-2 border-dashed border-accent/70" />
+            <div className="w-4 h-4 bg-[#2E8B7A] rounded-full shadow-lg border-2 border-white" />
+          </div>
         </div>
+        <button
+          onClick={() => navigate(-1)}
+          className="absolute top-4 left-4 w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-secondary transition-colors"
+        >
+          ←
+        </button>
+        {ride.distance_miles && (
+          <div className="absolute top-4 right-4 bg-white rounded-full px-3 py-1.5 shadow-md">
+            <span className="text-xs font-bold text-foreground">{ride.distance_miles} mi</span>
+          </div>
+        )}
       </div>
 
-      <div className="flex-1 px-4 pb-6 space-y-4">
+      <div className="flex-1 px-4 py-4 space-y-4">
+        {/* Driver / rider card */}
         <div className={cardCls}>
-          <div className="flex items-center gap-2 mb-3">
-            <StatusBadge status={ride.status} />
+          <div className="flex items-center gap-3">
+            <Avatar name={ride.creator_name} size="lg" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="font-black text-base text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
+                  {ride.creator_name}
+                </span>
+                {ride.creator_verification === 'verified' && <Verified />}
+              </div>
+              <Stars rating={ride.creator_rating} />
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {ride.creator_rides_count} {ride.creator_role === 'driver' ? 'rides offered' : 'rides taken'}
+              </p>
+            </div>
+            <Link
+              to={`/messages?with=${ride.creator_id}&ride_id=${ride.id}`}
+              className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-muted transition-colors shrink-0"
+            >
+              <MessageCircle className="w-5 h-5 text-foreground" />
+            </Link>
           </div>
+        </div>
+
+        {/* Route details */}
+        <div className={cardCls}>
+          <h3 className="font-bold text-sm mb-3" style={{ fontFamily: 'var(--font-display)' }}>Route Details</h3>
           <div className="flex items-start gap-3">
             <div className="flex flex-col items-center gap-1 mt-0.5 shrink-0">
               <div className="w-3 h-3 bg-accent rounded-full" />
@@ -107,15 +142,11 @@ export default function RideDetail() {
             <div className="space-y-2 flex-1">
               <div>
                 <p className="text-[11px] text-muted-foreground uppercase tracking-wide font-semibold">Pickup</p>
-                <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-accent shrink-0" /> {ride.origin}
-                </p>
+                <p className="text-sm font-semibold text-foreground">{ride.origin}</p>
               </div>
               <div>
                 <p className="text-[11px] text-muted-foreground uppercase tracking-wide font-semibold">Drop-off</p>
-                <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                  <Navigation className="w-3.5 h-3.5 text-[#2E8B7A] shrink-0" /> {ride.destination}
-                </p>
+                <p className="text-sm font-semibold text-foreground">{ride.destination}</p>
               </div>
             </div>
           </div>
@@ -141,13 +172,16 @@ export default function RideDetail() {
         </div>
 
         {!isOwner && !myRequest && ride.status === 'open' && (
-          <div className="space-y-2">
-            <button onClick={requestRide} className={`w-full ${btnPrimary}`} style={{ fontFamily: 'var(--font-display)' }}>
+          <div>
+            <button
+              onClick={requestRide}
+              className="w-full bg-accent text-white rounded-2xl py-4 font-bold text-sm shadow-lg hover:bg-accent/90 active:scale-[0.985] transition-all duration-150"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
               {ride.creator_role === 'driver' ? 'Connect with this driver' : 'Connect with this rider'}
             </button>
-            <p className="text-xs text-center text-muted-foreground leading-relaxed">
-              This sends a request and opens up messaging — {ride.creator_role === 'driver' ? 'the driver' : 'the rider'} can
-              chat with you before deciding.
+            <p className="text-xs text-center text-muted-foreground pb-2 mt-2 leading-relaxed">
+              {ride.creator_name} will be notified and can accept or decline your request.
             </p>
           </div>
         )}
@@ -200,11 +234,9 @@ export default function RideDetail() {
 
             <div className="space-y-2 mb-4">
               <label className={labelCls}>Rate them</label>
-              <div className="flex gap-2">
-                <select value={rateScore} onChange={(e) => setRateScore(e.target.value)} className={inputCls}>
-                  {[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} stars</option>)}
-                </select>
-              </div>
+              <select value={rateScore} onChange={(e) => setRateScore(e.target.value)} className={inputCls}>
+                {[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} stars</option>)}
+              </select>
               <input
                 placeholder="Comment (optional)"
                 value={rateComment}

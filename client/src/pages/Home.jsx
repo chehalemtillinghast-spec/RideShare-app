@@ -1,49 +1,80 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Car, Plus, Shield, Calendar, History, ArrowRight } from 'lucide-react';
+import { Plus, ArrowRight, Shield, Calendar, History } from 'lucide-react';
+import { api } from '../api';
 import { useAuth } from '../AuthContext';
+import { onSocketEvent } from '../socket';
+import { Avatar, Toggle } from '../components/primitives';
+import RideCard from '../components/RideCard';
 
-function ActionCard({ to, icon: Icon, title, subtitle }) {
+function DesignatedDriversCard() {
+  const { user, refresh } = useAuth();
+  const [drivers, setDrivers] = useState([]);
+
+  function load() {
+    api.get('/users/drivers/available').then(setDrivers).catch(() => {});
+  }
+
+  useEffect(() => { load(); }, []);
+  useEffect(() => onSocketEvent('drivers:changed', load), []);
+
+  async function toggleAvailable() {
+    await api.post('/users/me/driver-availability', { available: !user.driver_available });
+    await refresh();
+    load();
+  }
+
   return (
-    <Link
-      to={to}
-      className="w-full bg-card rounded-2xl p-4 border border-border shadow-sm flex items-center justify-between gap-3 hover:shadow-md active:scale-[0.985] transition-all duration-150"
-    >
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center shrink-0">
-          <Icon className="w-4 h-4 text-foreground" />
+    <div className="bg-card rounded-2xl p-4 border border-border shadow-sm">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <p className="font-bold text-sm text-foreground" style={{ fontFamily: 'var(--font-display)' }}>Designated Drivers</p>
+          <p className="text-xs text-muted-foreground">On call for the community</p>
         </div>
-        <div className="text-left min-w-0">
-          <p className="font-bold text-sm text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
-            {title}
-          </p>
-          <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
-        </div>
+        <Toggle on={!!user.driver_available} onToggle={toggleAvailable} />
       </div>
-      <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
-    </Link>
+      {drivers.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No drivers available right now.</p>
+      ) : (
+        <div className="flex gap-3 flex-wrap">
+          {drivers.map((d) => (
+            <Link key={d.id} to="/driver" className="flex flex-col items-center gap-1">
+              <div className="relative">
+                <Avatar name={d.full_name} size="sm" color="teal" />
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />
+              </div>
+              <span className="text-[10px] text-muted-foreground font-medium">{d.full_name.split(' ')[0]}</span>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
 export default function Home() {
   const { user } = useAuth();
-  const firstName = user.full_name.split(' ')[0];
+  const [rides, setRides] = useState([]);
+
+  function load() {
+    api.get('/rides?ride_type=posted&status=open').then(setRides).catch(() => {});
+  }
+
+  useEffect(() => { load(); }, []);
+  useEffect(() => onSocketEvent('rides:changed', load), []);
 
   return (
     <div className="flex flex-col bg-background min-h-[calc(100vh-56px)]">
       <div className="px-5 pt-8 pb-4">
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
-          Town Rides
-        </p>
-        <h1
-          className="text-[26px] font-black text-foreground leading-tight"
-          style={{ fontFamily: 'var(--font-display)' }}
-        >
-          Hi, {firstName}
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Town Rides</p>
+        <h1 className="text-[26px] font-black text-foreground leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
+          Hi, {user.full_name.split(' ')[0]}
         </h1>
-        <p className="text-sm text-muted-foreground mt-0.5">What would you like to do?</p>
       </div>
 
       <div className="flex-1 px-4 pb-6 space-y-4">
+        <DesignatedDriversCard />
+
         <Link
           to="/rides/new"
           className="w-full bg-accent text-white rounded-2xl p-4 flex items-center justify-between shadow-lg hover:bg-accent/90 active:scale-[0.985] transition-all duration-150"
@@ -53,20 +84,44 @@ export default function Home() {
               <Plus className="w-5 h-5" />
             </div>
             <div className="text-left">
-              <p className="font-bold text-sm" style={{ fontFamily: 'var(--font-display)' }}>
-                Post a Ride
-              </p>
+              <p className="font-bold text-sm" style={{ fontFamily: 'var(--font-display)' }}>Post a Ride</p>
               <p className="text-xs opacity-80">Share your route with neighbors</p>
             </div>
           </div>
           <ArrowRight className="w-5 h-5 opacity-70" />
         </Link>
 
-        <div className="space-y-3">
-          <ActionCard to="/rides" icon={Car} title="Browse posted rides" subtitle="See who's heading your way" />
-          <ActionCard to="/driver" icon={Shield} title="Designated driver" subtitle="Request an on-call ride home" />
-          <ActionCard to="/events" icon={Calendar} title="Community events" subtitle="Find a ride to what's happening" />
-          <ActionCard to="/history" icon={History} title="My ride history" subtitle="Past rides you've given or taken" />
+        <div className="grid grid-cols-3 gap-2">
+          <Link to="/driver" className="bg-card rounded-2xl p-3 border border-border shadow-sm flex flex-col items-center gap-1.5 text-center hover:shadow-md transition-shadow">
+            <Shield className="w-4 h-4 text-[#2E8B7A]" />
+            <span className="text-[11px] font-bold text-foreground">Driver</span>
+          </Link>
+          <Link to="/events" className="bg-card rounded-2xl p-3 border border-border shadow-sm flex flex-col items-center gap-1.5 text-center hover:shadow-md transition-shadow">
+            <Calendar className="w-4 h-4 text-accent" />
+            <span className="text-[11px] font-bold text-foreground">Events</span>
+          </Link>
+          <Link to="/history" className="bg-card rounded-2xl p-3 border border-border shadow-sm flex flex-col items-center gap-1.5 text-center hover:shadow-md transition-shadow">
+            <History className="w-4 h-4 text-muted-foreground" />
+            <span className="text-[11px] font-bold text-foreground">My Rides</span>
+          </Link>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-bold text-base text-foreground" style={{ fontFamily: 'var(--font-display)' }}>Rides Today</h2>
+            <Link to="/rides" className="text-xs font-semibold text-accent hover:opacity-70 transition-opacity">See all</Link>
+          </div>
+          {rides.length === 0 ? (
+            <div className="bg-card rounded-2xl p-5 border border-border text-center">
+              <p className="text-sm text-muted-foreground">No open rides yet. Be the first to post one!</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {rides.slice(0, 5).map((ride) => (
+                <RideCard key={ride.id} ride={ride} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

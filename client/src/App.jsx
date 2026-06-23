@@ -1,4 +1,5 @@
-import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
+import { Routes, Route, NavLink, Navigate, useLocation } from 'react-router-dom';
+import { Home as HomeIcon, Map, Trophy, MessageCircle, User } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import EmergencyButton from './EmergencyButton';
 import NotificationBadge from './NotificationBadge';
@@ -38,10 +39,40 @@ function AdminRoute({ children }) {
   return children;
 }
 
-const navLinkCls = ({ isActive }) =>
-  `flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-semibold transition-colors ${
-    isActive ? 'text-accent' : 'text-muted-foreground'
-  }`;
+const NAV_TABS = [
+  { to: '/', end: true, icon: HomeIcon, label: 'Home' },
+  { to: '/rides', icon: Map, label: 'Rides' },
+  { to: '/leaderboard', icon: Trophy, label: 'Top' },
+  { to: '/messages', icon: MessageCircle, label: 'Messages' },
+  { to: '/profile', icon: User, label: 'Profile' },
+];
+
+function BottomNav() {
+  const location = useLocation();
+  return (
+    <nav className="flex border-t border-border bg-background sticky bottom-0">
+      {NAV_TABS.map(({ to, end, icon: Icon, label }) => {
+        const isActive = end ? location.pathname === to : location.pathname.startsWith(to);
+        return (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            className="flex-1 flex flex-col items-center gap-0.5 py-3 relative"
+          >
+            {isActive && (
+              <span className="absolute top-1.5 left-1/2 -translate-x-1/2 w-5 h-0.5 bg-accent rounded-full" />
+            )}
+            <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-accent' : 'text-muted-foreground'}`} />
+            <span className={`text-[10px] font-semibold transition-colors ${isActive ? 'text-accent' : 'text-muted-foreground'}`}>
+              {label}
+            </span>
+          </NavLink>
+        );
+      })}
+    </nav>
+  );
+}
 
 export default function App() {
   const { user, loading } = useAuth();
@@ -102,19 +133,7 @@ export default function App() {
 
       {user && <EmergencyButton />}
 
-      {user && (
-        <nav className="flex border-t border-border bg-background sticky bottom-0 overflow-x-auto">
-          <NavLink to="/" end className={navLinkCls}>Home</NavLink>
-          <NavLink to="/rides" className={navLinkCls}>Rides</NavLink>
-          <NavLink to="/driver" className={navLinkCls}>Driver</NavLink>
-          <NavLink to="/events" className={navLinkCls}>Events</NavLink>
-          <NavLink to="/leaderboard" className={navLinkCls}>Top</NavLink>
-          <NavLink to="/history" className={navLinkCls}>My Rides</NavLink>
-          <NavLink to="/messages" className={navLinkCls}>Messages</NavLink>
-          <NavLink to="/profile" className={navLinkCls}>Profile</NavLink>
-          {user.role === 'admin' && <NavLink to="/admin" className={navLinkCls}>Admin</NavLink>}
-        </nav>
-      )}
+      {user && <BottomNav />}
     </>
   );
 }

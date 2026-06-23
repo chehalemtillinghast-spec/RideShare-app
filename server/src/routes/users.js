@@ -14,7 +14,14 @@ function publicUser(user) {
 router.get('/me', requireAuth, async (req, res) => {
   const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
   if (!result.rows[0]) return res.status(404).json({ error: 'User not found.' });
-  res.json(publicUser(result.rows[0]));
+  const statsResult = await pool.query(
+    `SELECT
+       (SELECT COUNT(*) FROM rides WHERE creator_id = $1 AND ride_type = 'posted' AND status != 'cancelled') AS rides_offered,
+       (SELECT COUNT(*) FROM ride_requests WHERE requester_id = $1 AND status = 'accepted') AS rides_taken,
+       (SELECT AVG(score)::numeric(2,1) FROM ratings WHERE ratee_id = $1) AS avg_rating`,
+    [req.user.id]
+  );
+  res.json({ ...publicUser(result.rows[0]), stats: statsResult.rows[0] });
 });
 
 router.patch('/me', requireAuth, async (req, res) => {

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Shield, BadgeCheck, Bell } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Shield, Bell, Lock } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
 import { enablePush, disablePush, getPushSubscription, isPushSupported } from '../push';
+import { Avatar, Verified, Stars } from '../components/primitives';
 
 const cardCls = 'bg-card rounded-2xl p-4 border border-border shadow-sm';
 const labelCls = 'text-[11px] font-bold text-muted-foreground uppercase tracking-widest block mb-1.5';
@@ -91,19 +93,79 @@ export default function Profile() {
     }
   }
 
+  const stats = user.stats || {};
+  const memberSince = user.created_at
+    ? new Date(user.created_at).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
+    : null;
+  const badges = [
+    user.verification_status === 'verified' && { label: 'Verified', cls: 'bg-secondary text-foreground' },
+    Number(stats.rides_offered || 0) + Number(stats.rides_taken || 0) >= 10 && { label: '10+ Rides', cls: 'bg-amber-100 text-amber-700' },
+    user.driver_available && { label: 'Designated Driver', cls: 'bg-[#2E8B7A]/10 text-[#2E8B7A]' },
+  ].filter(Boolean);
+
   return (
     <div className="flex flex-col bg-background min-h-[calc(100vh-56px)]">
       <div className="px-5 pt-8 pb-4">
-        <div className="flex items-center gap-1.5">
-          <h1 className="text-2xl font-black text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
-            {user.full_name}
-          </h1>
-          {user.verification_status === 'verified' && <BadgeCheck className="w-5 h-5 text-[#2E8B7A]" strokeWidth={2.5} />}
-        </div>
-        <p className="text-sm text-muted-foreground">{user.email}</p>
+        <h1 className="text-[26px] font-black text-foreground" style={{ fontFamily: 'var(--font-display)' }}>Profile</h1>
       </div>
 
       <div className="flex-1 px-4 pb-6 space-y-4">
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          <Link to="/driver" className="text-xs font-bold px-3.5 py-2 rounded-full bg-secondary text-foreground hover:bg-muted transition-colors whitespace-nowrap">
+            Designated driver
+          </Link>
+          <Link to="/events" className="text-xs font-bold px-3.5 py-2 rounded-full bg-secondary text-foreground hover:bg-muted transition-colors whitespace-nowrap">
+            Events
+          </Link>
+          <Link to="/history" className="text-xs font-bold px-3.5 py-2 rounded-full bg-secondary text-foreground hover:bg-muted transition-colors whitespace-nowrap">
+            My ride history
+          </Link>
+          {user.role === 'admin' && (
+            <Link to="/admin" className="text-xs font-bold px-3.5 py-2 rounded-full bg-secondary text-foreground hover:bg-muted transition-colors whitespace-nowrap flex items-center gap-1">
+              <Lock className="w-3 h-3" /> Admin
+            </Link>
+          )}
+        </div>
+
+        {/* Hero */}
+        <div className={cardCls}>
+          <div className="flex items-center gap-4">
+            <Avatar name={user.full_name} size="xl" color="accent" />
+            <div>
+              <div className="flex items-center gap-1.5">
+                <h2 className="text-xl font-black text-foreground" style={{ fontFamily: 'var(--font-display)' }}>{user.full_name}</h2>
+                {user.verification_status === 'verified' && <Verified />}
+              </div>
+              {memberSince && <p className="text-xs text-muted-foreground">Member since {memberSince}</p>}
+              <Stars rating={stats.avg_rating} />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-border">
+            {[
+              { label: 'Offered', value: stats.rides_offered ?? 0 },
+              { label: 'Taken', value: stats.rides_taken ?? 0 },
+              { label: 'Rating', value: stats.avg_rating ? `${stats.avg_rating}★` : '—' },
+            ].map((s) => (
+              <div key={s.label} className="text-center">
+                <p className="text-2xl font-black text-accent" style={{ fontFamily: 'var(--font-display)' }}>{s.value}</p>
+                <p className="text-xs text-muted-foreground font-medium">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Badges */}
+        {badges.length > 0 && (
+          <div className={cardCls}>
+            <h3 className="font-bold text-sm mb-3" style={{ fontFamily: 'var(--font-display)' }}>Badges Earned</h3>
+            <div className="flex gap-2 flex-wrap">
+              {badges.map((b) => (
+                <span key={b.label} className={`text-xs font-bold px-3 py-1.5 rounded-full ${b.cls}`}>{b.label}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className={cardCls}>
           <div className="flex items-center justify-between gap-2 mb-3">
             <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-secondary text-foreground capitalize">
@@ -183,6 +245,16 @@ export default function Profile() {
             </div>
             <button type="submit" className={`w-full ${btnSecondary}`}>+ Add contact</button>
           </form>
+        </div>
+
+        <div className="bg-[#FFF4F0] rounded-2xl p-4 border border-accent/20">
+          <p className="text-xs text-muted-foreground text-center mb-3 leading-relaxed">
+            Use the SOS button (bottom right of any screen) to send a safety alert to your emergency contacts and Town Rides support.
+          </p>
+          <div className="w-full bg-accent text-white rounded-2xl py-4 font-black text-sm flex items-center justify-center gap-2 shadow-md" style={{ fontFamily: 'var(--font-display)' }}>
+            <Shield className="w-5 h-5" />
+            SOS Always Available
+          </div>
         </div>
 
         <button onClick={logout} className={`w-full ${btnDanger}`}>Log out</button>

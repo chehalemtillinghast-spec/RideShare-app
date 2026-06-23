@@ -19,7 +19,9 @@ router.get('/', requireAuth, async (req, res) => {
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
   const result = await pool.query(
-    `SELECT r.*, u.full_name AS creator_name, u.verification_status AS creator_verification
+    `SELECT r.*, u.full_name AS creator_name, u.verification_status AS creator_verification,
+       (SELECT AVG(score)::numeric(2,1) FROM ratings WHERE ratee_id = u.id) AS creator_rating,
+       (SELECT COUNT(*) FROM rides WHERE creator_id = u.id AND status != 'cancelled') AS creator_rides_count
      FROM rides r JOIN users u ON u.id = r.creator_id
      ${where}
      ORDER BY r.departure_time ASC NULLS LAST, r.created_at DESC`,
@@ -38,7 +40,9 @@ router.get('/mine', requireAuth, async (req, res) => {
 
 router.get('/:id', requireAuth, async (req, res) => {
   const rideResult = await pool.query(
-    `SELECT r.*, u.full_name AS creator_name, u.verification_status AS creator_verification, u.phone AS creator_phone
+    `SELECT r.*, u.full_name AS creator_name, u.verification_status AS creator_verification, u.phone AS creator_phone,
+       (SELECT AVG(score)::numeric(2,1) FROM ratings WHERE ratee_id = u.id) AS creator_rating,
+       (SELECT COUNT(*) FROM rides WHERE creator_id = u.id AND status != 'cancelled') AS creator_rides_count
      FROM rides r JOIN users u ON u.id = r.creator_id WHERE r.id = $1`,
     [req.params.id]
   );

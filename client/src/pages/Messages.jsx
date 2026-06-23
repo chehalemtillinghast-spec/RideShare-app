@@ -1,21 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, Send, BadgeCheck } from 'lucide-react';
+import { ChevronLeft, Send } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
 import { onSocketEvent } from '../socket';
+import { Avatar, Verified } from '../components/primitives';
 
 function truncate(text, max) {
   return text.length > max ? `${text.slice(0, max)}...` : text;
-}
-
-function initials(name) {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0].toUpperCase())
-    .join('');
 }
 
 function MessagesInbox() {
@@ -52,16 +44,12 @@ function MessagesInbox() {
             }`}
           >
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shrink-0">
-                {initials(c.other_name)}
-              </div>
+              <Avatar name={c.other_name} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className="font-bold text-sm text-foreground truncate">{c.other_name}</span>
-                    {c.other_verification === 'verified' && (
-                      <BadgeCheck className="w-3.5 h-3.5 text-[#2E8B7A] shrink-0" strokeWidth={2.5} />
-                    )}
+                    {c.other_verification === 'verified' && <Verified sm />}
                   </div>
                   <span className="text-[11px] text-muted-foreground shrink-0">
                     {new Date(c.last_message_at).toLocaleDateString()}
@@ -87,6 +75,11 @@ function MessageThread({ otherId, rideId }) {
   const [messages, setMessages] = useState([]);
   const [body, setBody] = useState('');
   const [error, setError] = useState('');
+  const [otherUser, setOtherUser] = useState(null);
+
+  useEffect(() => {
+    api.get(`/users/${otherId}`).then(setOtherUser).catch(() => {});
+  }, [otherId]);
 
   async function load() {
     const query = rideId ? `?with=${otherId}&ride_id=${rideId}` : `?with=${otherId}`;
@@ -126,9 +119,15 @@ function MessageThread({ otherId, rideId }) {
         >
           <ChevronLeft className="w-5 h-5 text-foreground" />
         </Link>
-        <h1 className="text-base font-bold text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
-          Conversation
-        </h1>
+        {otherUser && <Avatar name={otherUser.full_name} size="sm" />}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1">
+            <h1 className="font-bold text-sm text-foreground truncate" style={{ fontFamily: 'var(--font-display)' }}>
+              {otherUser?.full_name || 'Conversation'}
+            </h1>
+            {otherUser?.verification_status === 'verified' && <Verified sm />}
+          </div>
+        </div>
       </div>
 
       <div className="flex-1 px-4 py-4 space-y-2.5">
