@@ -32,7 +32,7 @@ export default function Register() {
   const labelCls = 'text-[11px] font-bold text-muted-foreground uppercase tracking-widest block mb-1.5';
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-56px)] px-5 pt-10 pb-6 bg-background">
+    <div className="flex flex-col min-h-full px-5 pt-10 pb-6 bg-background">
       <h1
         className="text-2xl font-black text-foreground mb-1"
         style={{ fontFamily: 'var(--font-display)' }}
@@ -40,7 +40,7 @@ export default function Register() {
         Create your account
       </h1>
       <p className="text-sm text-muted-foreground mb-6">
-        Town Rides is for neighbors 18 and older.
+        Ride is for neighbors 18 and older.
       </p>
 
       <form onSubmit={onSubmit} className="space-y-4">

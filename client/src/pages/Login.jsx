@@ -28,7 +28,7 @@ export default function Login() {
     'w-full px-4 py-3 bg-secondary rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-colors';
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-56px)] px-5 pt-10 pb-6 bg-background">
+    <div className="flex flex-col min-h-full px-5 pt-10 pb-6 bg-background">
       <h1
         className="text-2xl font-black text-foreground mb-6"
         style={{ fontFamily: 'var(--font-display)' }}

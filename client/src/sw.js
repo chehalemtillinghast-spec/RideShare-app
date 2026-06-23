@@ -11,11 +11,11 @@ self.addEventListener('push', (event) => {
   try {
     data = event.data ? event.data.json() : {};
   } catch {
-    data = { title: 'Town Rides', body: event.data ? event.data.text() : '' };
+    data = { title: 'Ride', body: event.data ? event.data.text() : '' };
   }
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Town Rides', {
+    self.registration.showNotification(data.title || 'Ride', {
       body: data.body || '',
       icon: '/pwa-192x192.png',
       badge: '/pwa-192x192.png',

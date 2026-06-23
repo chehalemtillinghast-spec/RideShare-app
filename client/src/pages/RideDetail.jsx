@@ -4,7 +4,7 @@ import { MessageCircle, Clock, Users } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
 import { onSocketEvent } from '../socket';
-import { Avatar, Verified, Stars } from '../components/primitives';
+import { Avatar, Verified, Stars, BackButton } from '../components/primitives';
 
 const cardCls = 'bg-card rounded-2xl p-4 border border-border shadow-sm';
 const labelCls = 'text-[11px] font-bold text-muted-foreground uppercase tracking-widest block mb-1.5';
@@ -72,7 +72,7 @@ export default function RideDetail() {
   }
 
   return (
-    <div className="flex flex-col bg-background min-h-[calc(100vh-56px)]">
+    <div className="flex flex-col bg-background min-h-full">
       {/* Map placeholder, matching the Figma route illustration */}
       <div className="relative h-52 bg-[#C8DFC8] shrink-0 overflow-hidden">
         <svg viewBox="0 0 390 208" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid slice">
@@ -91,12 +91,9 @@ export default function RideDetail() {
             <div className="w-4 h-4 bg-[#2E8B7A] rounded-full shadow-lg border-2 border-white" />
           </div>
         </div>
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute top-4 left-4 w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-secondary transition-colors"
-        >
-          ←
-        </button>
+        <div className="absolute top-4 left-4">
+          <BackButton onPress={() => navigate(-1)} />
+        </div>
         {ride.distance_miles && (
           <div className="absolute top-4 right-4 bg-white rounded-full px-3 py-1.5 shadow-md">
             <span className="text-xs font-bold text-foreground">{ride.distance_miles} mi</span>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 
-const PAGE_CLS = 'flex flex-col min-h-[calc(100vh-56px)] px-5 pt-10 pb-6 bg-background';
+const PAGE_CLS = 'flex flex-col min-h-full px-5 pt-10 pb-6 bg-background';
 const HEADING_CLS = 'text-2xl font-black text-foreground mb-1';
 const INPUT_CLS =
   'w-full px-4 py-3 bg-secondary rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-colors';

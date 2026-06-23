@@ -21,7 +21,7 @@ router.post('/', requireAuth, async (req, res) => {
   const alert = alertResult.rows[0];
 
   const triggeringUser = await pool.query('SELECT full_name FROM users WHERE id = $1', [req.user.id]);
-  const triggeringName = triggeringUser.rows[0]?.full_name || 'A Town Rides user';
+  const triggeringName = triggeringUser.rows[0]?.full_name || 'A Ride user';
 
   const contacts = await pool.query('SELECT * FROM emergency_contacts WHERE user_id = $1', [req.user.id]);
 

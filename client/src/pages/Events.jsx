@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, MapPin, Plus } from 'lucide-react';
 import { api } from '../api';
+import { useAuth } from '../AuthContext';
+import SwipeToDelete from '../components/SwipeToDelete';
 
 const labelCls = 'text-[11px] font-bold text-muted-foreground uppercase tracking-widest block mb-1.5';
 const inputCls =
   'w-full px-4 py-3 bg-secondary rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-colors';
 
 export default function Events() {
+  const { user } = useAuth();
   const [events, setEvents] = useState([]);
   const [form, setForm] = useState({ title: '', description: '', location: '', start_time: '' });
   const [showForm, setShowForm] = useState(false);
@@ -19,10 +22,16 @@ export default function Events() {
   }
   useEffect(() => { load(); }, []);
 
+  async function deleteEvent(id) {
+    if (!confirm('Delete this event? This cannot be undone.')) return;
+    await api.del(`/events/${id}`);
+    load();
+  }
+
   async function createEvent(e) {
     e.preventDefault();
     try {
-      await api.post('/events', form);
+      await api.post('/events', { ...form, start_time: new Date(form.start_time).toISOString() });
       setForm({ title: '', description: '', location: '', start_time: '' });
       setShowForm(false);
       load();
@@ -32,8 +41,8 @@ export default function Events() {
   }
 
   return (
-    <div className="flex flex-col bg-background min-h-[calc(100vh-56px)]">
-      <div className="px-5 pt-8 pb-4 flex items-center justify-between">
+    <div className="flex flex-col bg-background min-h-full">
+      <div className="px-5 pt-5 pb-3 flex items-center justify-between">
         <h1 className="text-2xl font-black text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
           Community events
         </h1>
@@ -45,7 +54,7 @@ export default function Events() {
         </button>
       </div>
 
-      <div className="flex-1 px-4 pb-6 space-y-4">
+      <div className="flex-1 px-4 pb-4 space-y-3">
         {showForm && (
           <form onSubmit={createEvent} className="bg-card rounded-2xl p-4 border border-border shadow-sm space-y-3">
             <div>
@@ -90,25 +99,26 @@ export default function Events() {
 
         <div className="space-y-3">
           {events.map((ev) => (
-            <Link
-              key={ev.id}
-              to={`/events/${ev.id}`}
-              className="block bg-card rounded-2xl p-4 border border-border shadow-sm hover:shadow-md active:scale-[0.985] transition-all duration-150"
-            >
-              <h3 className="font-bold text-sm text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
-                {ev.title}
-              </h3>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5">
-                <Calendar className="w-3.5 h-3.5 shrink-0" />
-                <span>{new Date(ev.start_time).toLocaleString()}</span>
-              </div>
-              {ev.location && (
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
-                  <MapPin className="w-3.5 h-3.5 shrink-0" />
-                  <span>{ev.location}</span>
+            <SwipeToDelete key={ev.id} disabled={ev.created_by !== user.id} onDelete={() => deleteEvent(ev.id)}>
+              <Link
+                to={`/events/${ev.id}`}
+                className="block bg-card rounded-2xl p-4 border border-border shadow-sm hover:shadow-md active:scale-[0.985] transition-all duration-150"
+              >
+                <h3 className="font-bold text-sm text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
+                  {ev.title}
+                </h3>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5">
+                  <Calendar className="w-3.5 h-3.5 shrink-0" />
+                  <span>{new Date(ev.start_time).toLocaleString()}</span>
                 </div>
-              )}
-            </Link>
+                {ev.location && (
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                    <MapPin className="w-3.5 h-3.5 shrink-0" />
+                    <span>{ev.location}</span>
+                  </div>
+                )}
+              </Link>
+            </SwipeToDelete>
           ))}
         </div>
       </div>

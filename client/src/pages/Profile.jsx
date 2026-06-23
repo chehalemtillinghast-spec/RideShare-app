@@ -26,6 +26,22 @@ export default function Profile() {
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteError, setDeleteError] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [sosSending, setSosSending] = useState(false);
+  const [sosSent, setSosSent] = useState(false);
+
+  async function triggerSos() {
+    if (!confirm('Send an emergency alert now? This will notify your emergency contacts and admins.')) return;
+    setSosSending(true);
+    try {
+      await api.post('/emergency', {});
+      setSosSent(true);
+      setTimeout(() => setSosSent(false), 5000);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setSosSending(false);
+    }
+  }
 
   async function loadContacts() {
     setContacts(await api.get('/users/me/emergency-contacts'));
@@ -104,7 +120,7 @@ export default function Profile() {
   ].filter(Boolean);
 
   return (
-    <div className="flex flex-col bg-background min-h-[calc(100vh-56px)]">
+    <div className="flex flex-col bg-background min-h-full">
       <div className="px-5 pt-8 pb-4">
         <h1 className="text-[26px] font-black text-foreground" style={{ fontFamily: 'var(--font-display)' }}>Profile</h1>
       </div>
@@ -210,7 +226,7 @@ export default function Profile() {
             </h3>
           </div>
           <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
-            If a contact below is also a Town Rides user (matched by phone or email), they'll be notified in-app and via
+            If a contact below is also a Ride user (matched by phone or email), they'll be notified in-app and via
             push if they triggered or were listed in an alert.
           </p>
 
@@ -249,12 +265,17 @@ export default function Profile() {
 
         <div className="bg-[#FFF4F0] rounded-2xl p-4 border border-accent/20">
           <p className="text-xs text-muted-foreground text-center mb-3 leading-relaxed">
-            Use the SOS button (bottom right of any screen) to send a safety alert to your emergency contacts and Town Rides support.
+            Sends a safety alert to your emergency contacts and Ride support.
           </p>
-          <div className="w-full bg-accent text-white rounded-2xl py-4 font-black text-sm flex items-center justify-center gap-2 shadow-md" style={{ fontFamily: 'var(--font-display)' }}>
+          <button
+            onClick={triggerSos}
+            disabled={sosSending}
+            className="w-full bg-accent text-white rounded-2xl py-4 font-black text-sm flex items-center justify-center gap-2 shadow-md hover:bg-accent/90 active:scale-[0.985] transition-all disabled:opacity-60"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
             <Shield className="w-5 h-5" />
-            SOS Always Available
-          </div>
+            {sosSent ? 'Alert sent' : sosSending ? 'Sending...' : 'Send SOS Alert'}
+          </button>
         </div>
 
         <button onClick={logout} className={`w-full ${btnDanger}`}>Log out</button>

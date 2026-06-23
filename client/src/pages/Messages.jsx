@@ -10,6 +10,38 @@ function truncate(text, max) {
   return text.length > max ? `${text.slice(0, max)}...` : text;
 }
 
+function DriverRow() {
+  const [drivers, setDrivers] = useState([]);
+
+  function load() {
+    api.get('/users/drivers/available').then(setDrivers).catch(() => {});
+  }
+
+  useEffect(() => { load(); }, []);
+  useEffect(() => onSocketEvent('drivers:changed', load), []);
+
+  if (drivers.length === 0) return null;
+
+  return (
+    <div className="px-4 pb-3">
+      <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Designated Drivers</p>
+      <div className="flex gap-4 overflow-x-auto pb-1">
+        {drivers.map((d) => (
+          <Link key={d.id} to={`/messages?with=${d.id}`} className="flex flex-col items-center gap-1 shrink-0 w-14">
+            <div className="relative">
+              <Avatar name={d.full_name} size="md" color="teal" />
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
+            </div>
+            <span className="text-[11px] text-foreground font-medium truncate w-full text-center">
+              {d.full_name.split(' ')[0]}
+            </span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function MessagesInbox() {
   const [conversations, setConversations] = useState([]);
   const [error, setError] = useState('');
@@ -22,12 +54,14 @@ function MessagesInbox() {
   useEffect(() => onSocketEvent('message:new', load), []);
 
   return (
-    <div className="flex flex-col bg-background min-h-[calc(100vh-56px)]">
+    <div className="flex flex-col bg-background min-h-full">
       <div className="px-5 pt-8 pb-4">
         <h1 className="text-2xl font-black text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
           Messages
         </h1>
       </div>
+
+      <DriverRow />
 
       <div className="flex-1 px-4 pb-6 space-y-3">
         {error && <p className="text-sm text-destructive">{error}</p>}
@@ -111,7 +145,7 @@ function MessageThread({ otherId, rideId }) {
   }
 
   return (
-    <div className="flex flex-col bg-background min-h-[calc(100vh-56px)]">
+    <div className="flex flex-col bg-background min-h-full">
       <div className="px-4 pt-6 pb-3 border-b border-border flex items-center gap-3">
         <Link
           to="/messages"

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MapPin, Navigation, Calendar, Users, Minus, Plus, Repeat2 } from 'lucide-react';
 import { api } from '../api';
+import LocationInput from '../components/LocationInput';
 
 function Toggle({ on, onToggle }) {
   return (
@@ -17,9 +18,9 @@ function Toggle({ on, onToggle }) {
   );
 }
 
-const labelCls = 'text-[11px] font-bold text-muted-foreground uppercase tracking-widest block mb-1.5';
+const labelCls = 'text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1';
 const inputCls =
-  'w-full px-4 py-3 bg-secondary rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-colors';
+  'w-full h-[38px] px-3.5 bg-secondary rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-colors';
 
 export default function PostRide() {
   const navigate = useNavigate();
@@ -36,6 +37,7 @@ export default function PostRide() {
     cost_estimate: '',
     notes: '',
     is_recurring: false,
+    recurrence_frequency: '',
     recurrence_rule: '',
   });
   const [error, setError] = useState('');
@@ -57,7 +59,13 @@ export default function PostRide() {
     setError('');
     setLoading(true);
     try {
-      const ride = await api.post('/rides', { ...form, ride_type: 'posted', event_id: eventId ? Number(eventId) : undefined });
+      const departure_time = form.departure_time ? new Date(form.departure_time).toISOString() : null;
+      const ride = await api.post('/rides', {
+        ...form,
+        departure_time,
+        ride_type: 'posted',
+        event_id: eventId ? Number(eventId) : undefined,
+      });
       navigate(`/rides/${ride.id}`);
     } catch (err) {
       setError(err.message);
@@ -67,14 +75,14 @@ export default function PostRide() {
   }
 
   return (
-    <div className="flex flex-col bg-background min-h-[calc(100vh-56px)]">
-      <div className="px-5 pt-8 pb-4">
-        <h1 className="text-2xl font-black text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
+    <div className="flex flex-col bg-background min-h-full">
+      <div className="px-5 pt-1.5 pb-0.5">
+        <h1 className="text-xl font-black text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
           Post a ride
         </h1>
       </div>
 
-      <form onSubmit={onSubmit} className="flex-1 px-4 pb-6 space-y-4">
+      <form onSubmit={onSubmit} className="flex-1 px-4 pb-1 space-y-2.5">
         <div>
           <label className={labelCls}>I am the...</label>
           <select value={form.creator_role} onChange={update('creator_role')} className={inputCls}>
@@ -83,65 +91,58 @@ export default function PostRide() {
           </select>
         </div>
 
-        <div>
-          <label className={labelCls}>From</label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-3.5 w-4 h-4 text-accent pointer-events-none" />
-            <input
-              required
-              value={form.origin}
-              onChange={update('origin')}
-              placeholder="Pickup location..."
-              className={`${inputCls} pl-9`}
-            />
-          </div>
+        <div className="grid grid-cols-2 gap-2">
+          <LocationInput
+            icon={MapPin}
+            iconClassName="text-accent"
+            required
+            value={form.origin}
+            onChange={(v) => setForm((f) => ({ ...f, origin: v }))}
+            placeholder="Pickup..."
+          />
+
+          <LocationInput
+            icon={Navigation}
+            iconClassName="text-[#2E8B7A]"
+            required
+            value={form.destination}
+            onChange={(v) => setForm((f) => ({ ...f, destination: v }))}
+            placeholder="Drop-off..."
+          />
         </div>
 
-        <div>
-          <label className={labelCls}>To</label>
-          <div className="relative">
-            <Navigation className="absolute left-3 top-3.5 w-4 h-4 text-[#2E8B7A] pointer-events-none" />
-            <input
-              required
-              value={form.destination}
-              onChange={update('destination')}
-              placeholder="Drop-off location..."
-              className={`${inputCls} pl-9`}
-            />
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className={labelCls}>Departure time</label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+              <input
+                type="datetime-local"
+                value={form.departure_time}
+                onChange={update('departure_time')}
+                className={`${inputCls} pl-8`}
+              />
+            </div>
           </div>
-        </div>
 
-        <div>
-          <label className={labelCls}>Departure time</label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-3.5 w-4 h-4 text-muted-foreground pointer-events-none" />
-            <input
-              type="datetime-local"
-              value={form.departure_time}
-              onChange={update('departure_time')}
-              className={`${inputCls} pl-9`}
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className={labelCls}>Available Seats</label>
-          <div className="flex items-center gap-3 bg-secondary rounded-xl border border-border px-4 py-3">
-            <Users className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm flex-1 text-foreground">Passenger seats</span>
-            <div className="flex items-center gap-3">
+          <div>
+            <label className={labelCls}>Seats</label>
+            <div className="flex items-center justify-between gap-1 bg-secondary rounded-xl border border-border px-2.5 py-1">
               <button
                 type="button"
                 onClick={() => setSeats(Number(form.available_seats) - 1)}
-                className="w-7 h-7 rounded-full bg-card border border-border flex items-center justify-center hover:bg-accent hover:border-accent hover:text-white transition-colors"
+                className="w-7 h-7 rounded-full bg-card border border-border flex items-center justify-center hover:bg-accent hover:border-accent hover:text-white transition-colors shrink-0"
               >
                 <Minus className="w-3.5 h-3.5" />
               </button>
-              <span className="text-base font-bold w-4 text-center">{form.available_seats}</span>
+              <span className="text-base font-bold flex items-center gap-1 text-foreground">
+                <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                {form.available_seats}
+              </span>
               <button
                 type="button"
                 onClick={() => setSeats(Number(form.available_seats) + 1)}
-                className="w-7 h-7 rounded-full bg-card border border-border flex items-center justify-center hover:bg-accent hover:border-accent hover:text-white transition-colors"
+                className="w-7 h-7 rounded-full bg-card border border-border flex items-center justify-center hover:bg-accent hover:border-accent hover:text-white transition-colors shrink-0"
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>
@@ -149,19 +150,30 @@ export default function PostRide() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <label className={labelCls}>Miles</label>
-            <input type="number" step="0.1" value={form.distance_miles} onChange={update('distance_miles')} className={inputCls} />
-          </div>
-          <div>
-            <label className={labelCls}>Minutes</label>
-            <input type="number" value={form.estimated_minutes} onChange={update('estimated_minutes')} className={inputCls} />
-          </div>
-          <div>
-            <label className={labelCls}>Gas $</label>
-            <input type="number" step="0.01" value={form.cost_estimate} onChange={update('cost_estimate')} className={inputCls} />
-          </div>
+        <div className="grid grid-cols-3 gap-2">
+          <input
+            type="number"
+            step="0.1"
+            placeholder="Miles"
+            value={form.distance_miles}
+            onChange={update('distance_miles')}
+            className={inputCls}
+          />
+          <input
+            type="number"
+            placeholder="Minutes/Hours"
+            value={form.estimated_minutes}
+            onChange={update('estimated_minutes')}
+            className={inputCls}
+          />
+          <input
+            type="number"
+            step="0.01"
+            placeholder="Gas $"
+            value={form.cost_estimate}
+            onChange={update('cost_estimate')}
+            className={inputCls}
+          />
         </div>
 
         <div>
@@ -170,26 +182,52 @@ export default function PostRide() {
             value={form.notes}
             onChange={update('notes')}
             placeholder="Anything passengers should know?"
-            rows={3}
-            className={`${inputCls} resize-none`}
+            rows={2}
+            className={`${inputCls} h-auto py-1 resize-none`}
           />
         </div>
 
-        <div className="flex items-center justify-between bg-secondary rounded-xl border border-border px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Repeat2 className="w-4 h-4 text-muted-foreground" />
+        <div className="flex items-center justify-between bg-secondary rounded-xl border border-border px-3 py-1">
+          <div className="flex items-center gap-2.5">
+            <Repeat2 className="w-4 h-4 text-muted-foreground shrink-0" />
             <div>
-              <p className="text-sm font-semibold text-foreground">Recurring Ride</p>
-              <p className="text-xs text-muted-foreground">Repeat same route weekly</p>
+              <p className="text-sm font-semibold text-foreground leading-tight">Recurring Ride</p>
+              <p className="text-[11px] text-muted-foreground leading-tight">Repeat this route on a schedule</p>
             </div>
           </div>
-          <Toggle on={form.is_recurring} onToggle={() => setForm((f) => ({ ...f, is_recurring: !f.is_recurring }))} />
+          <Toggle
+            on={form.is_recurring}
+            onToggle={() =>
+              setForm((f) => ({
+                ...f,
+                is_recurring: !f.is_recurring,
+                recurrence_frequency: f.is_recurring ? '' : 'weekly',
+              }))
+            }
+          />
         </div>
 
         {form.is_recurring && (
-          <div>
-            <label className={labelCls}>Days (e.g. MON,TUE,WED,THU,FRI)</label>
-            <input value={form.recurrence_rule} onChange={update('recurrence_rule')} className={inputCls} />
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className={`${labelCls} whitespace-nowrap`}>Repeats</label>
+              <select value={form.recurrence_frequency} onChange={update('recurrence_frequency')} className={inputCls}>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+            {form.recurrence_frequency === 'weekly' && (
+              <div>
+                <label className={`${labelCls} whitespace-nowrap`}>Days</label>
+                <input
+                  value={form.recurrence_rule}
+                  onChange={update('recurrence_rule')}
+                  placeholder="Mon, Tue..."
+                  className={inputCls}
+                />
+              </div>
+            )}
           </div>
         )}
 
@@ -198,7 +236,7 @@ export default function PostRide() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-accent text-white rounded-2xl py-4 font-bold text-sm shadow-lg hover:bg-accent/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-50 disabled:active:scale-100"
+          className="w-full bg-accent text-white rounded-2xl py-2 font-bold text-sm shadow-lg hover:bg-accent/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-50 disabled:active:scale-100"
           style={{ fontFamily: 'var(--font-display)' }}
         >
           {loading ? 'Posting...' : 'Post ride'}

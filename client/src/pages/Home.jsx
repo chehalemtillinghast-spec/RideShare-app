@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, ArrowRight, Shield, Calendar, History } from 'lucide-react';
+import { Plus, ArrowRight, Calendar, History } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
 import { onSocketEvent } from '../socket';
@@ -64,15 +64,14 @@ export default function Home() {
   useEffect(() => onSocketEvent('rides:changed', load), []);
 
   return (
-    <div className="flex flex-col bg-background min-h-[calc(100vh-56px)]">
-      <div className="px-5 pt-8 pb-4">
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Town Rides</p>
+    <div className="flex flex-col bg-background min-h-full">
+      <div className="px-5 pt-5 pb-3">
         <h1 className="text-[26px] font-black text-foreground leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
           Hi, {user.full_name.split(' ')[0]}
         </h1>
       </div>
 
-      <div className="flex-1 px-4 pb-6 space-y-4">
+      <div className="flex-1 px-4 pb-4 space-y-3">
         <DesignatedDriversCard />
 
         <Link
@@ -91,11 +90,7 @@ export default function Home() {
           <ArrowRight className="w-5 h-5 opacity-70" />
         </Link>
 
-        <div className="grid grid-cols-3 gap-2">
-          <Link to="/driver" className="bg-card rounded-2xl p-3 border border-border shadow-sm flex flex-col items-center gap-1.5 text-center hover:shadow-md transition-shadow">
-            <Shield className="w-4 h-4 text-[#2E8B7A]" />
-            <span className="text-[11px] font-bold text-foreground">Driver</span>
-          </Link>
+        <div className="grid grid-cols-2 gap-2">
           <Link to="/events" className="bg-card rounded-2xl p-3 border border-border shadow-sm flex flex-col items-center gap-1.5 text-center hover:shadow-md transition-shadow">
             <Calendar className="w-4 h-4 text-accent" />
             <span className="text-[11px] font-bold text-foreground">Events</span>

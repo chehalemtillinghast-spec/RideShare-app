@@ -12,7 +12,7 @@ function initials(name) {
 }
 
 function total(person) {
-  return person.rides_offered + person.rides_taken;
+  return Number(person.rides_offered) + Number(person.rides_taken);
 }
 
 function PodiumSpot({ person, place }) {
@@ -94,7 +94,7 @@ export default function Leaderboard() {
   }, []);
 
   return (
-    <div className="flex flex-col bg-background min-h-[calc(100vh-56px)]">
+    <div className="flex flex-col bg-background min-h-full">
       <div className="px-5 pt-8 pb-4">
         <h1 className="text-2xl font-black text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
           Leaderboard

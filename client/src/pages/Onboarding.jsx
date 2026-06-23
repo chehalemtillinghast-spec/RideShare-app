@@ -26,7 +26,7 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-56px)] px-5 pt-10 pb-6 bg-background">
+    <div className="flex flex-col min-h-full px-5 pt-10 pb-6 bg-background">
       <div className="flex items-center gap-2 mb-1">
         <Shield className="w-5 h-5 text-[#2E8B7A]" />
         <h1 className="text-2xl font-black text-foreground" style={{ fontFamily: 'var(--font-display)' }}>

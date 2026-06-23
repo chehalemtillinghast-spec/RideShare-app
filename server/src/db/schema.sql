@@ -53,7 +53,8 @@ CREATE TABLE IF NOT EXISTS rides (
   notes TEXT,
   status TEXT NOT NULL DEFAULT 'open', -- open | full | in_progress | completed | cancelled
   is_recurring BOOLEAN NOT NULL DEFAULT FALSE,
-  recurrence_rule TEXT, -- e.g. 'MON,TUE,WED,THU,FRI'
+  recurrence_frequency TEXT, -- daily | weekly | monthly
+  recurrence_rule TEXT, -- e.g. 'MON,TUE,WED,THU,FRI' (only meaningful when recurrence_frequency = 'weekly')
   event_id INTEGER REFERENCES events(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -175,6 +176,17 @@ CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_hash ON password_reset_toke
 ALTER TABLE events DROP CONSTRAINT IF EXISTS events_created_by_fkey;
 ALTER TABLE events ADD CONSTRAINT events_created_by_fkey
   FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;
+
+-- Added after rides shipped with only recurrence_rule — lets recurring
+-- rides specify daily/weekly/monthly instead of always being weekly.
+ALTER TABLE rides ADD COLUMN IF NOT EXISTS recurrence_frequency TEXT;
+
+-- rides.event_id originally had no ON DELETE clause (defaulted to
+-- RESTRICT), which would block deleting an event that still has rides
+-- attached to it. Keep the ride itself but null out its event link instead.
+ALTER TABLE rides DROP CONSTRAINT IF EXISTS rides_event_id_fkey;
+ALTER TABLE rides ADD CONSTRAINT rides_event_id_fkey
+  FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE SET NULL;
 
 CREATE INDEX IF NOT EXISTS idx_rides_status ON rides(status);
 CREATE INDEX IF NOT EXISTS idx_messages_ride ON messages(ride_id);

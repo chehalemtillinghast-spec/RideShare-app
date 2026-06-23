@@ -1,7 +1,6 @@
 import { Routes, Route, NavLink, Navigate, useLocation } from 'react-router-dom';
 import { Home as HomeIcon, Map, Trophy, MessageCircle, User } from 'lucide-react';
 import { useAuth } from './AuthContext';
-import EmergencyButton from './EmergencyButton';
 import NotificationBadge from './NotificationBadge';
 import WakingBanner from './WakingBanner';
 
@@ -50,7 +49,7 @@ const NAV_TABS = [
 function BottomNav() {
   const location = useLocation();
   return (
-    <nav className="flex border-t border-border bg-background sticky bottom-0">
+    <nav className="flex border-t border-border bg-background shrink-0">
       {NAV_TABS.map(({ to, end, icon: Icon, label }) => {
         const isActive = end ? location.pathname === to : location.pathname.startsWith(to);
         return (
@@ -89,15 +88,15 @@ export default function App() {
   }
 
   return (
-    <>
+    <div className="flex flex-col h-screen overflow-hidden">
       <WakingBanner />
-      <div className="flex items-center justify-between px-5 py-3.5 bg-background border-b border-border">
+      <div className="flex items-center justify-between px-5 py-3.5 bg-background border-b border-border shrink-0">
         <NavLink
           to="/"
           className="text-lg font-black text-foreground"
           style={{ fontFamily: 'var(--font-display)' }}
         >
-          Town Rides
+          Ride
         </NavLink>
         {user && (
           <div className="flex items-center gap-3">
@@ -109,31 +108,31 @@ export default function App() {
         )}
       </div>
 
-      <Routes>
-        <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
-        <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
-        <Route path="/forgot-password" element={user ? <Navigate to="/" /> : <ForgotPassword />} />
-        <Route path="/reset-password" element={user ? <Navigate to="/" /> : <ResetPassword />} />
-        <Route path="/onboarding" element={<PrivateRoute><Onboarding /></PrivateRoute>} />
-        <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
-        <Route path="/rides" element={<PrivateRoute><Rides /></PrivateRoute>} />
-        <Route path="/rides/new" element={<PrivateRoute><PostRide /></PrivateRoute>} />
-        <Route path="/rides/:id" element={<PrivateRoute><RideDetail /></PrivateRoute>} />
-        <Route path="/driver" element={<PrivateRoute><DesignatedDriver /></PrivateRoute>} />
-        <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
-        <Route path="/events" element={<PrivateRoute><Events /></PrivateRoute>} />
-        <Route path="/events/:id" element={<PrivateRoute><EventDetail /></PrivateRoute>} />
-        <Route path="/flag" element={<PrivateRoute><Flag /></PrivateRoute>} />
-        <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-        <Route path="/history" element={<PrivateRoute><History /></PrivateRoute>} />
-        <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
-        <Route path="/leaderboard" element={<PrivateRoute><Leaderboard /></PrivateRoute>} />
-        <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
-      </Routes>
-
-      {user && <EmergencyButton />}
+      <main className="flex-1 overflow-y-auto">
+        <Routes>
+          <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
+          <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
+          <Route path="/forgot-password" element={user ? <Navigate to="/" /> : <ForgotPassword />} />
+          <Route path="/reset-password" element={user ? <Navigate to="/" /> : <ResetPassword />} />
+          <Route path="/onboarding" element={<PrivateRoute><Onboarding /></PrivateRoute>} />
+          <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
+          <Route path="/rides" element={<PrivateRoute><Rides /></PrivateRoute>} />
+          <Route path="/rides/new" element={<PrivateRoute><PostRide /></PrivateRoute>} />
+          <Route path="/rides/:id" element={<PrivateRoute><RideDetail /></PrivateRoute>} />
+          <Route path="/driver" element={<PrivateRoute><DesignatedDriver /></PrivateRoute>} />
+          <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
+          <Route path="/events" element={<PrivateRoute><Events /></PrivateRoute>} />
+          <Route path="/events/:id" element={<PrivateRoute><EventDetail /></PrivateRoute>} />
+          <Route path="/flag" element={<PrivateRoute><Flag /></PrivateRoute>} />
+          <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+          <Route path="/history" element={<PrivateRoute><History /></PrivateRoute>} />
+          <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
+          <Route path="/leaderboard" element={<PrivateRoute><Leaderboard /></PrivateRoute>} />
+          <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+        </Routes>
+      </main>
 
       {user && <BottomNav />}
-    </>
+    </div>
   );
 }

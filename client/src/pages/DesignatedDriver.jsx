@@ -42,7 +42,7 @@ export default function DesignatedDriver() {
   const canRequest = request.origin && request.destination;
 
   return (
-    <div className="flex flex-col bg-background min-h-[calc(100vh-56px)]">
+    <div className="flex flex-col bg-background min-h-full">
       <div className="px-5 pt-8 pb-4">
         <h1 className="text-2xl font-black text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
           Designated driver

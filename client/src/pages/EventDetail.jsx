@@ -17,7 +17,7 @@ export default function EventDetail() {
   if (!event) return <div className="px-4 pt-8 text-sm text-muted-foreground">Loading...</div>;
 
   return (
-    <div className="flex flex-col bg-background min-h-[calc(100vh-56px)]">
+    <div className="flex flex-col bg-background min-h-full">
       <div className="px-5 pt-8 pb-4">
         <h1 className="text-2xl font-black text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
           {event.title}

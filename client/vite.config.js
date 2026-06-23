@@ -16,8 +16,8 @@ export default defineConfig({
         injectionPoint: undefined,
       },
       manifest: {
-        name: 'Town Rides',
-        short_name: 'TownRides',
+        name: 'Ride',
+        short_name: 'Ride',
         description: 'Local rideshare and community connection for our town.',
         theme_color: '#2d6a4f',
         background_color: '#ffffff',

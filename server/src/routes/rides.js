@@ -59,7 +59,7 @@ router.post('/', requireAuth, async (req, res) => {
   const {
     ride_type, creator_role, origin, destination, departure_time,
     available_seats, distance_miles, estimated_minutes, cost_estimate,
-    notes, is_recurring, recurrence_rule, event_id,
+    notes, is_recurring, recurrence_frequency, recurrence_rule, event_id,
   } = req.body;
 
   if (!ride_type || !creator_role || !origin || !destination) {
@@ -73,12 +73,13 @@ router.post('/', requireAuth, async (req, res) => {
     `INSERT INTO rides (
        creator_id, ride_type, creator_role, origin, destination, departure_time,
        available_seats, distance_miles, estimated_minutes, cost_estimate,
-       notes, is_recurring, recurrence_rule, event_id
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
+       notes, is_recurring, recurrence_frequency, recurrence_rule, event_id
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING *`,
     [
       req.user.id, ride_type, creator_role, origin, destination, departure_time || null,
       available_seats || 1, distance_miles || null, estimated_minutes || null, cost_estimate || null,
-      notes || null, !!is_recurring, recurrence_rule || null, event_id || null,
+      notes || null, !!is_recurring, is_recurring ? (recurrence_frequency || 'weekly') : null,
+      recurrence_rule || null, event_id || null,
     ]
   );
   const ride = result.rows[0];
@@ -104,6 +105,17 @@ router.patch('/:id', requireAuth, async (req, res) => {
   );
   emitToAll('rides:changed', { rideId: req.params.id });
   res.json(result.rows[0]);
+});
+
+router.delete('/:id', requireAuth, async (req, res) => {
+  const rideResult = await pool.query('SELECT * FROM rides WHERE id = $1', [req.params.id]);
+  const ride = rideResult.rows[0];
+  if (!ride) return res.status(404).json({ error: 'Ride not found.' });
+  if (ride.creator_id !== req.user.id) return res.status(403).json({ error: 'Not your ride.' });
+
+  await pool.query('DELETE FROM rides WHERE id = $1', [req.params.id]);
+  emitToAll('rides:changed', { rideId: Number(req.params.id) });
+  res.status(204).end();
 });
 
 // Request to join a posted ride

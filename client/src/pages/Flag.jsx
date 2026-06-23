@@ -31,7 +31,7 @@ export default function Flag() {
 
   if (done) {
     return (
-      <div className="flex flex-col min-h-[calc(100vh-56px)] px-5 pt-10 pb-6 bg-background">
+      <div className="flex flex-col min-h-full px-5 pt-10 pb-6 bg-background">
         <h1 className="text-2xl font-black text-foreground mb-1" style={{ fontFamily: 'var(--font-display)' }}>
           Report submitted
         </h1>
@@ -48,7 +48,7 @@ export default function Flag() {
   }
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-56px)] px-5 pt-10 pb-6 bg-background">
+    <div className="flex flex-col min-h-full px-5 pt-10 pb-6 bg-background">
       <h1 className="text-2xl font-black text-foreground mb-6" style={{ fontFamily: 'var(--font-display)' }}>
         Report a problem
       </h1>
