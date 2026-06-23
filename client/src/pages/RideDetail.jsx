@@ -261,13 +261,6 @@ export default function RideDetail() {
             </div>
           </div>
         )}
-
-        <Link
-          to={`/flag?ride_id=${ride.id}&reported_user_id=${otherPartyId || ride.creator_id}`}
-          className="block text-center text-xs text-muted-foreground hover:text-destructive transition-colors"
-        >
-          Report a problem with this ride
-        </Link>
       </div>
     </div>
   );

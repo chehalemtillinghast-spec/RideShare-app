@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, ArrowRight, Calendar, History } from 'lucide-react';
+import { Plus, ArrowRight, Calendar, History, Flag } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
 import { onSocketEvent } from '../socket';
@@ -38,7 +38,7 @@ function DesignatedDriversCard() {
       ) : (
         <div className="flex gap-3 flex-wrap">
           {drivers.map((d) => (
-            <Link key={d.id} to="/driver" className="flex flex-col items-center gap-1">
+            <Link key={d.id} to={`/messages?with=${d.id}`} className="flex flex-col items-center gap-1">
               <div className="relative">
                 <Avatar name={d.full_name} size="sm" color="teal" />
                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />
@@ -90,7 +90,7 @@ export default function Home() {
           <ArrowRight className="w-5 h-5 opacity-70" />
         </Link>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <Link to="/events" className="bg-card rounded-2xl p-3 border border-border shadow-sm flex flex-col items-center gap-1.5 text-center hover:shadow-md transition-shadow">
             <Calendar className="w-4 h-4 text-accent" />
             <span className="text-[11px] font-bold text-foreground">Events</span>
@@ -98,6 +98,10 @@ export default function Home() {
           <Link to="/history" className="bg-card rounded-2xl p-3 border border-border shadow-sm flex flex-col items-center gap-1.5 text-center hover:shadow-md transition-shadow">
             <History className="w-4 h-4 text-muted-foreground" />
             <span className="text-[11px] font-bold text-foreground">My Rides</span>
+          </Link>
+          <Link to="/flag" className="bg-card rounded-2xl p-3 border border-border shadow-sm flex flex-col items-center gap-1.5 text-center hover:shadow-md transition-shadow">
+            <Flag className="w-4 h-4 text-muted-foreground" />
+            <span className="text-[11px] font-bold text-foreground">Report</span>
           </Link>
         </div>
 

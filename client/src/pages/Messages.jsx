@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, Send } from 'lucide-react';
+import { ChevronLeft, Send, Flag } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
 import { onSocketEvent } from '../socket';
@@ -104,12 +104,63 @@ function MessagesInbox() {
   );
 }
 
+function ReportUserModal({ otherUser, onClose, onSubmit }) {
+  const [notes, setNotes] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  async function confirmReport() {
+    setSubmitting(true);
+    try {
+      await onSubmit(notes);
+      onClose();
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
+      <div className="w-full max-w-md bg-card rounded-t-3xl p-5 pb-7" onClick={(e) => e.stopPropagation()}>
+        <h3 className="font-black text-lg text-foreground mb-1.5" style={{ fontFamily: 'var(--font-display)' }}>
+          Report {otherUser?.full_name || 'this user'}?
+        </h3>
+        <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+          An admin will review this conversation. Add any notes that might help them.
+        </p>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Notes (optional)"
+          rows={3}
+          className="w-full px-4 py-3 bg-secondary rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-colors resize-none mb-3"
+        />
+        <div className="flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 bg-secondary text-foreground rounded-2xl py-3 font-bold text-sm border border-border hover:bg-muted transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={confirmReport}
+            disabled={submitting}
+            className="flex-1 bg-destructive text-white rounded-2xl py-3 font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {submitting ? 'Reporting...' : 'Report'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MessageThread({ otherId, rideId }) {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [body, setBody] = useState('');
   const [error, setError] = useState('');
   const [otherUser, setOtherUser] = useState(null);
+  const [showReport, setShowReport] = useState(false);
 
   useEffect(() => {
     api.get(`/users/${otherId}`).then(setOtherUser).catch(() => {});
@@ -144,6 +195,15 @@ function MessageThread({ otherId, rideId }) {
     }
   }
 
+  async function submitReport(notes) {
+    await api.post('/flags', {
+      reported_user_id: Number(otherId),
+      ride_id: rideId ? Number(rideId) : undefined,
+      reason: 'Reported from messages',
+      details: notes || undefined,
+    });
+  }
+
   return (
     <div className="flex flex-col bg-background min-h-full">
       <div className="px-4 pt-6 pb-3 border-b border-border flex items-center gap-3">
@@ -162,7 +222,18 @@ function MessageThread({ otherId, rideId }) {
             {otherUser?.verification_status === 'verified' && <Verified sm />}
           </div>
         </div>
+        <button
+          onClick={() => setShowReport(true)}
+          className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center hover:bg-muted transition-colors shrink-0"
+          title="Report this user"
+        >
+          <Flag className="w-4 h-4 text-muted-foreground" />
+        </button>
       </div>
+
+      {showReport && (
+        <ReportUserModal otherUser={otherUser} onClose={() => setShowReport(false)} onSubmit={submitReport} />
+      )}
 
       <div className="flex-1 px-4 py-4 space-y-2.5">
         {messages.length === 0 && <p className="text-sm text-muted-foreground">No messages yet. Say hello!</p>}

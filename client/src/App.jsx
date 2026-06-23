@@ -13,12 +13,12 @@ import Home from './pages/Home';
 import Rides from './pages/Rides';
 import PostRide from './pages/PostRide';
 import RideDetail from './pages/RideDetail';
-import DesignatedDriver from './pages/DesignatedDriver';
 import Messages from './pages/Messages';
 import Events from './pages/Events';
 import EventDetail from './pages/EventDetail';
 import Flag from './pages/Flag';
 import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 import History from './pages/History';
 import Admin from './pages/Admin';
 import Notifications from './pages/Notifications';
@@ -119,12 +119,12 @@ export default function App() {
           <Route path="/rides" element={<PrivateRoute><Rides /></PrivateRoute>} />
           <Route path="/rides/new" element={<PrivateRoute><PostRide /></PrivateRoute>} />
           <Route path="/rides/:id" element={<PrivateRoute><RideDetail /></PrivateRoute>} />
-          <Route path="/driver" element={<PrivateRoute><DesignatedDriver /></PrivateRoute>} />
           <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
           <Route path="/events" element={<PrivateRoute><Events /></PrivateRoute>} />
           <Route path="/events/:id" element={<PrivateRoute><EventDetail /></PrivateRoute>} />
           <Route path="/flag" element={<PrivateRoute><Flag /></PrivateRoute>} />
           <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+          <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
           <Route path="/history" element={<PrivateRoute><History /></PrivateRoute>} />
           <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
           <Route path="/leaderboard" element={<PrivateRoute><Leaderboard /></PrivateRoute>} />
