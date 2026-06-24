@@ -38,7 +38,7 @@ function DesignatedDriversCard() {
       ) : (
         <div className="flex gap-3 flex-wrap">
           {drivers.map((d) => (
-            <Link key={d.id} to={`/messages?with=${d.id}`} className="flex flex-col items-center gap-1">
+            <Link key={d.id} to={`/users/${d.id}`} className="flex flex-col items-center gap-1">
               <div className="relative">
                 <Avatar name={d.full_name} size="sm" color="teal" />
                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { MessageCircle, Clock, Users } from 'lucide-react';
+import { MessageCircle, Clock, Users, Pencil } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
 import { onSocketEvent } from '../socket';
@@ -105,8 +105,10 @@ export default function RideDetail() {
         {/* Driver / rider card */}
         <div className={cardCls}>
           <div className="flex items-center gap-3">
-            <Avatar name={ride.creator_name} size="lg" />
-            <div className="flex-1 min-w-0">
+            <Link to={`/users/${ride.creator_id}`} className="shrink-0">
+              <Avatar name={ride.creator_name} size="lg" />
+            </Link>
+            <Link to={`/users/${ride.creator_id}`} className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="font-black text-base text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
                   {ride.creator_name}
@@ -117,7 +119,7 @@ export default function RideDetail() {
               <p className="text-xs text-muted-foreground mt-0.5">
                 {ride.creator_rides_count} {ride.creator_role === 'driver' ? 'rides offered' : 'rides taken'}
               </p>
-            </div>
+            </Link>
             <Link
               to={`/messages?with=${ride.creator_id}&ride_id=${ride.id}`}
               className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-muted transition-colors shrink-0"
@@ -129,7 +131,14 @@ export default function RideDetail() {
 
         {/* Route details */}
         <div className={cardCls}>
-          <h3 className="font-bold text-sm mb-3" style={{ fontFamily: 'var(--font-display)' }}>Route Details</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-bold text-sm" style={{ fontFamily: 'var(--font-display)' }}>Route Details</h3>
+            {isOwner && (
+              <Link to={`/rides/${ride.id}/edit`} className="flex items-center gap-1 text-xs font-bold text-accent hover:opacity-70 transition-opacity">
+                <Pencil className="w-3.5 h-3.5" /> Edit
+              </Link>
+            )}
+          </div>
           <div className="flex items-start gap-3">
             <div className="flex flex-col items-center gap-1 mt-0.5 shrink-0">
               <div className="w-3 h-3 bg-accent rounded-full" />

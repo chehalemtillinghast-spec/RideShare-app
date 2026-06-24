@@ -41,11 +41,25 @@ router.patch('/me', requireAuth, async (req, res) => {
 router.get('/:id', requireAuth, async (req, res) => {
   const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.params.id]);
   if (!result.rows[0]) return res.status(404).json({ error: 'User not found.' });
-  const ratingsResult = await pool.query(
-    'SELECT AVG(score)::numeric(2,1) AS avg_score, COUNT(*) AS count FROM ratings WHERE ratee_id = $1',
+  const statsResult = await pool.query(
+    `SELECT
+       (SELECT COUNT(*) FROM rides WHERE creator_id = $1 AND ride_type = 'posted' AND status != 'cancelled') AS rides_offered,
+       (SELECT COUNT(*) FROM ride_requests WHERE requester_id = $1 AND status = 'accepted') AS rides_taken,
+       (SELECT AVG(score)::numeric(2,1) FROM ratings WHERE ratee_id = $1) AS avg_rating`,
     [req.params.id]
   );
-  res.json({ ...publicUser(result.rows[0]), rating: ratingsResult.rows[0] });
+  const ridesResult = await pool.query(
+    `SELECT id, origin, destination, departure_time, available_seats FROM rides
+     WHERE creator_id = $1 AND ride_type = 'posted' AND status = 'open'
+     ORDER BY departure_time ASC NULLS LAST LIMIT 5`,
+    [req.params.id]
+  );
+  const reviewsResult = await pool.query(
+    `SELECT r.score, r.comment, r.created_at, u.full_name AS rater_name FROM ratings r
+     JOIN users u ON u.id = r.rater_id WHERE r.ratee_id = $1 ORDER BY r.created_at DESC LIMIT 10`,
+    [req.params.id]
+  );
+  res.json({ ...publicUser(result.rows[0]), stats: statsResult.rows[0], open_rides: ridesResult.rows, reviews: reviewsResult.rows });
 });
 
 // Designated driver availability toggle

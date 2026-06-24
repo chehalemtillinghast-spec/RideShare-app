@@ -1,8 +1,15 @@
-import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { MapPin, Navigation, Calendar, Users, Minus, Plus, Repeat2 } from 'lucide-react';
 import { api } from '../api';
 import LocationInput from '../components/LocationInput';
+
+function toLocalInputValue(isoString) {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
 function Toggle({ on, onToggle }) {
   return (
@@ -24,6 +31,8 @@ const inputCls =
 
 export default function PostRide() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEdit = !!id;
   const [params] = useSearchParams();
   const eventId = params.get('event_id');
   const [form, setForm] = useState({
@@ -42,6 +51,31 @@ export default function PostRide() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingRide, setLoadingRide] = useState(isEdit);
+
+  useEffect(() => {
+    if (!isEdit) return;
+    api.get(`/rides/${id}`).then((ride) => {
+      setForm({
+        creator_role: ride.creator_role,
+        origin: ride.origin,
+        destination: ride.destination,
+        departure_time: toLocalInputValue(ride.departure_time),
+        available_seats: ride.available_seats,
+        distance_miles: ride.distance_miles ?? '',
+        estimated_minutes: ride.estimated_minutes ?? '',
+        cost_estimate: ride.cost_estimate ?? '',
+        notes: ride.notes || '',
+        is_recurring: ride.is_recurring,
+        recurrence_frequency: ride.recurrence_frequency || '',
+        recurrence_rule: ride.recurrence_rule || '',
+      });
+      setLoadingRide(false);
+    }).catch((err) => {
+      setError(err.message);
+      setLoadingRide(false);
+    });
+  }, [id, isEdit]);
 
   function update(key) {
     return (e) => {
@@ -60,13 +94,18 @@ export default function PostRide() {
     setLoading(true);
     try {
       const departure_time = form.departure_time ? new Date(form.departure_time).toISOString() : null;
-      const ride = await api.post('/rides', {
-        ...form,
-        departure_time,
-        ride_type: 'posted',
-        event_id: eventId ? Number(eventId) : undefined,
-      });
-      navigate(`/rides/${ride.id}`);
+      if (isEdit) {
+        await api.patch(`/rides/${id}`, { ...form, departure_time });
+        navigate(`/rides/${id}`);
+      } else {
+        const ride = await api.post('/rides', {
+          ...form,
+          departure_time,
+          ride_type: 'posted',
+          event_id: eventId ? Number(eventId) : undefined,
+        });
+        navigate(`/rides/${ride.id}`);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -74,11 +113,13 @@ export default function PostRide() {
     }
   }
 
+  if (loadingRide) return <div className="px-4 pt-8 text-sm text-muted-foreground">Loading...</div>;
+
   return (
     <div className="flex flex-col bg-background min-h-full">
       <div className="px-5 pt-1.5 pb-0.5">
         <h1 className="text-xl font-black text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
-          Post a ride
+          {isEdit ? 'Edit ride' : 'Post a ride'}
         </h1>
       </div>
 
@@ -112,20 +153,20 @@ export default function PostRide() {
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <div>
+          <div className="min-w-0">
             <label className={labelCls}>Departure time</label>
-            <div className="relative">
+            <div className="relative min-w-0">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
               <input
                 type="datetime-local"
                 value={form.departure_time}
                 onChange={update('departure_time')}
-                className={`${inputCls} pl-8`}
+                className={`${inputCls} pl-8 min-w-0`}
               />
             </div>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <label className={labelCls}>Seats</label>
             <div className="flex items-center justify-between gap-1 bg-secondary rounded-xl border border-border px-2.5 py-1">
               <button
@@ -239,7 +280,7 @@ export default function PostRide() {
           className="w-full bg-accent text-white rounded-2xl py-2 font-bold text-sm shadow-lg hover:bg-accent/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-50 disabled:active:scale-100"
           style={{ fontFamily: 'var(--font-display)' }}
         >
-          {loading ? 'Posting...' : 'Post ride'}
+          {loading ? (isEdit ? 'Saving...' : 'Posting...') : isEdit ? 'Save changes' : 'Post ride'}
         </button>
       </form>
     </div>

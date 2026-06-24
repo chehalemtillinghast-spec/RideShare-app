@@ -38,6 +38,19 @@ router.get('/mine', requireAuth, async (req, res) => {
   res.json(result.rows);
 });
 
+// Rides where the current user and :otherId had an accepted connection (eligible for rating)
+router.get('/shared/:otherId', requireAuth, async (req, res) => {
+  const result = await pool.query(
+    `SELECT r.id, r.origin, r.destination, r.departure_time
+     FROM rides r
+     JOIN ride_requests rr ON rr.ride_id = r.id AND rr.status = 'accepted'
+     WHERE (r.creator_id = $1 AND rr.requester_id = $2) OR (r.creator_id = $2 AND rr.requester_id = $1)
+     ORDER BY r.departure_time DESC NULLS LAST, r.created_at DESC`,
+    [req.user.id, req.params.otherId]
+  );
+  res.json(result.rows);
+});
+
 router.get('/:id', requireAuth, async (req, res) => {
   const rideResult = await pool.query(
     `SELECT r.*, u.full_name AS creator_name, u.verification_status AS creator_verification, u.phone AS creator_phone,
@@ -93,15 +106,32 @@ router.patch('/:id', requireAuth, async (req, res) => {
   if (!ride) return res.status(404).json({ error: 'Ride not found.' });
   if (ride.creator_id !== req.user.id) return res.status(403).json({ error: 'Not your ride.' });
 
-  const { status, available_seats, departure_time, notes } = req.body;
+  const {
+    status, available_seats, departure_time, notes,
+    origin, destination, distance_miles, estimated_minutes, cost_estimate,
+    is_recurring, recurrence_frequency, recurrence_rule,
+  } = req.body;
   const result = await pool.query(
     `UPDATE rides SET
        status = COALESCE($1, status),
        available_seats = COALESCE($2, available_seats),
        departure_time = COALESCE($3, departure_time),
-       notes = COALESCE($4, notes)
-     WHERE id = $5 RETURNING *`,
-    [status, available_seats, departure_time, notes, req.params.id]
+       notes = COALESCE($4, notes),
+       origin = COALESCE($5, origin),
+       destination = COALESCE($6, destination),
+       distance_miles = COALESCE($7, distance_miles),
+       estimated_minutes = COALESCE($8, estimated_minutes),
+       cost_estimate = COALESCE($9, cost_estimate),
+       is_recurring = COALESCE($10, is_recurring),
+       recurrence_frequency = COALESCE($11, recurrence_frequency),
+       recurrence_rule = COALESCE($12, recurrence_rule)
+     WHERE id = $13 RETURNING *`,
+    [
+      status, available_seats, departure_time, notes,
+      origin, destination, distance_miles, estimated_minutes, cost_estimate,
+      is_recurring, recurrence_frequency, recurrence_rule,
+      req.params.id,
+    ]
   );
   emitToAll('rides:changed', { rideId: req.params.id });
   res.json(result.rows[0]);
